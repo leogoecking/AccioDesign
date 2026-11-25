@@ -408,7 +408,45 @@ describe("Fase 4 — contrato visual", () => {
       assert.match(files["SKILL.md"], /dados não confiáveis/);
       assert.match(files["manifest.json"], /successForeground/);
       const cssCompiler = await compile(files["theme.css"], { base: process.cwd(), onDependency: () => {} });
-      const output = cssCompiler.build(["bg-primary", "text-foreground", "rounded-lg", "dark:bg-background"]);
+      const candidates = ["bg-primary", "text-foreground", "rounded-lg", "dark:bg-background", "font-heading", "font-sans", "container"];
+      const output = cssCompiler.build(candidates);
+      const appCss = await fs.readFile(path.resolve("app/app.css"), "utf8");
+      const appCompiler = await compile(appCss, { base: path.resolve("app"), onDependency: () => {} });
+      const appOutput = appCompiler.build(candidates);
+      const postcss = (await import("postcss")).default;
+      const rulesFor = (css: string, selector: string) => {
+        const found: Array<{ context: string[]; declarations: string[] }> = [];
+        postcss.parse(css).walkRules(rule => {
+          if (rule.selector !== selector) return;
+          const context: string[] = [];
+          let parent = rule.parent;
+          while (parent && parent.type !== "root") {
+            if (parent.type === "atrule") context.unshift(`@${parent.name} ${parent.params}`);
+            parent = parent.parent;
+          }
+          const declarations: string[] = [];
+          rule.walkDecls(decl => { declarations.push(`${decl.prop}:${decl.value}`); });
+          found.push({ context, declarations });
+        });
+        return found;
+      };
+      for (const selector of ["html", "body", "[data-accio-theme]", ".font-heading", ".font-sans", ".container"]) {
+        const expected = rulesFor(appOutput, selector);
+        assert.ok(expected.length > 0, `seletor ausente no app: ${selector}`);
+        assert.deepStrictEqual(rulesFor(output, selector), expected, `divergência no seletor ${selector}`);
+      }
+      const declarationsFor = (selector: string) => rulesFor(output, selector).flatMap(rule => rule.declarations);
+      assert.ok(declarationsFor("html").includes("font-family:var(--font-sans)"));
+      assert.ok(declarationsFor(".font-heading").includes("font-family:var(--font-sans)"));
+      assert.ok(declarationsFor("[data-accio-theme]").includes("font-family:var(--font-sans)"));
+      assert.ok(declarationsFor("[data-accio-theme]").includes("letter-spacing:var(--letter-spacing, 0em)"));
+      assert.ok(declarationsFor(".container").includes("padding-inline:1.5rem"));
+      assert.ok(declarationsFor(".container").includes("margin-inline:auto"));
+      assert.match(output, /@font-face/);
+      assert.match(output, /Inter Variable/);
+      for (const dependency of ["tailwindcss", "tw-animate-css", "shadcn/tailwind.css", "@fontsource-variable/inter"]) {
+        assert.ok(files["theme.css"].includes(`@import "${dependency}";`), `import ausente: ${dependency}`);
+      }
       assert.match(output, /\.bg-primary/);
       assert.match(output, /--primary/);
       assert.match(output, /\.dark/);
