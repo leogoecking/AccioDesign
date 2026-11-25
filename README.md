@@ -171,3 +171,21 @@ O **AccioDesign** é licenciado sob a **Apache License, Version 2.0**. Consulte:
 - [LICENSE](./LICENSE) — texto integral da licença Apache 2.0;
 - [NOTICE](./NOTICE) — avisos legais do projeto e atribuições;
 - [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) — mapeamento detalhado de módulos reutilizados, origens e adaptações realizadas.
+
+## Exportar design para agentes (Fase 4)
+
+No modo **Experimentar**, use **Exportar design**. Havendo alterações pendentes, confirme o salvamento antes de gerar o pacote; se o salvamento falhar ou houver uma nova edição durante a operação, a exportação é interrompida. O arquivo ZIP contém exclusivamente o projeto selecionado e é gerado localmente a partir do estado salvo, sem chamadas a IA.
+
+| Arquivo | Conteúdo |
+| --- | --- |
+| `manifest.json` | Versão do contrato, identificação e compatibilidade. |
+| `design.json` | Documento Puck completo do projeto salvo. |
+| `tokens.json` | Tokens aprovados de Light e Dark, com campos sem correspondência no TokenBridge. |
+| `theme.css` | Variáveis e sombras usadas no preview e associações Tailwind CSS v4. |
+| `DESIGN.md` | Escolhas registradas, regras e limitações do contrato. |
+| `SKILL.md` | Requisitos e recomendações para implementação por agentes. |
+| `components.md` | Hierarquia, propriedades, caminhos e dependências dos componentes encontrados. |
+
+O AccioDesign é a fonte de verdade. Valores de cores não são convertidos nem derivados na exportação; as sombras compostas seguem o cálculo já empregado no preview. O `theme.css` usa as mesmas regras visuais compartilhadas pelo app, incluindo tipografia e container. No projeto de destino, instale **Tailwind CSS v4**, `tw-animate-css`, `shadcn` (com `shadcn/tailwind.css`) e `@fontsource-variable/inter`, e processe o CSS com Tailwind; mantenha esses pacotes disponíveis para resolver os imports. `@fontsource-variable/inter` fornece a fonte Inter Variable padrão. Para fontes diferentes selecionadas em Light ou Dark, disponibilize as famílias indicadas em `tokens.json` por meio de arquivos locais ou de um provedor de fontes escolhido pelo projeto de destino. O ZIP não contém arquivos de fontes nem baixa fontes adicionais. A aplicação deve ativar a classe `.dark` quando necessário; o modo selecionado está no manifesto.
+
+O modelo do TokenBridge pressupõe cores de sucesso, aviso e informação, escalas tipográficas e de espaçamento, além de configurações de componentes que não fazem parte do tema AccioDesign. Esses campos são listados como não mapeados, sem valores inventados. O inventário descreve dependências diretas conhecidas dos componentes locais; não gera código executável nem garante equivalência de bibliotecas no projeto de destino. O pacote inclui o conteúdo inserido no projeto: revise-o antes de compartilhar. A exportação rejeita campos e padrões de credenciais comuns, mas não é possível identificar todos os segredos em texto livre; arquivos de ambiente e outros projetos não são lidos para compor o ZIP. Consulte [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md#5-tokenbridge) para a proveniência e licença MIT do TokenBridge.

@@ -48,3 +48,12 @@ Para mais detalhes, consulte também [app/theme/tweakcn/THIRD_PARTY_NOTICES.md](
 
 - **`@fontsource-variable/inter`:** SIL Open Font License 1.1 (`OFL-1.1`).
 - **`lucide-react`:** Licença ISC (https://lucide.dev).
+
+---
+
+## 5. TokenBridge
+
+- **Repositório:** https://github.com/GaoDesign/tokenbridge.dev
+- **Commit analisado:** `eaf0c1cbced2fc76874c76ea789399b10eebfe5e`.
+- **Copyright:** 2024-present GaoDesign. **Licença:** MIT ([texto integral](./app/export/tokenbridge/LICENSE-TOKENBRIDGE-MIT.txt)).
+- **Origem e adaptação:** `src/lib/generator.ts` (formatos e organização de regras/tokens) e `src/lib/skill-generator.ts` (estrutura e princípios do `SKILL.md` e inventário) foram adaptados em `app/export/tokenbridge/`. Os modelos foram traduzidos para pt-BR e reduzidos ao documento e aos valores efetivos do AccioDesign; foram removidos Handlebars, store Zustand, valores padrão presumidos, geração de escalas e conversões de cor. O ZIP usa JSZip, também utilizado pelo upstream, com metadados fixos para reprodutibilidade. A aplicação Next.js, o editor e a store não são incorporados.

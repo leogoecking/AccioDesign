@@ -20,6 +20,7 @@ try {
       "--platform=node",
       "--format=esm",
       "--packages=external",
+      "--loader:.css=text",
       `--outfile=${outFile}`,
     ],
     {
