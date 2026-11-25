@@ -1,1 +1,486 @@
-{"/":{"content":[{"type":"HeadingBlock","props":{"title":"Edit this page by adding /edit to the end of the URL","id":"HeadingBlock-1694032984497"}}],"root":{"props":{"title":"Puck + React Router 7 demo"}},"zones":{}}}
+{
+  "/": {
+    "root": {
+      "props": {
+        "title": "AccioDesign — Painel Operacional",
+        "description": "Laboratório visual de interfaces administrativas com Puck e shadcn/ui.",
+        "surface": "muted"
+      }
+    },
+    "content": [
+      {
+        "type": "Header",
+        "props": {
+          "id": "Header-accio-main",
+          "companyName": "AccioDesign",
+          "primaryNavigation": [
+            {
+              "label": "Visão Geral",
+              "url": "/",
+              "description": "",
+              "items": [],
+              "cta": {
+                "label": "",
+                "url": "",
+                "size": "default",
+                "variant": "default",
+                "icon": "none"
+              }
+            },
+            {
+              "label": "Operações",
+              "description": "Acompanhe filas, pedidos, métricas de SLA e auditoria.",
+              "cta": {
+                "label": "Abrir relatórios",
+                "url": "#relatorios",
+                "size": "sm",
+                "variant": "default",
+                "icon": "arrow-right"
+              },
+              "items": [
+                {
+                  "label": "Indicadores",
+                  "url": "#indicadores"
+                },
+                {
+                  "label": "Movimentações",
+                  "url": "#movimentacoes"
+                },
+                {
+                  "label": "Solicitações",
+                  "url": "#solicitacoes"
+                }
+              ]
+            },
+            {
+              "label": "Administração",
+              "description": "Controle de acessos, equipes e parâmetros do sistema.",
+              "cta": {
+                "label": "Configurações",
+                "url": "#configuracoes",
+                "size": "sm",
+                "variant": "outline",
+                "icon": "settings"
+              },
+              "items": [
+                {
+                  "label": "Equipe de Plantão",
+                  "url": "#equipe"
+                },
+                {
+                  "label": "Permissões",
+                  "url": "#permissoes"
+                }
+              ]
+            }
+          ],
+          "secondaryNavigation": [
+            {
+              "label": "Documentação",
+              "url": "#docs",
+              "variant": "ghost",
+              "icon": "none",
+              "divider": true,
+              "isHiddenOnMobile": true
+            },
+            {
+              "label": "Abrir Editor",
+              "url": "/edit",
+              "variant": "outline",
+              "icon": "layers",
+              "divider": false,
+              "isHiddenOnMobile": false
+            }
+          ]
+        }
+      },
+      {
+        "type": "PageHeader",
+        "props": {
+          "id": "PageHeader-accio-main",
+          "title": "Painel Operacional",
+          "subtitle": "Visão consolidada de indicadores, filas de atendimento e movimentações recentes.",
+          "badge": {
+            "label": "Produção",
+            "url": "",
+            "variant": "secondary"
+          },
+          "actions": [
+            {
+              "label": "Exportar CSV",
+              "url": "#exportar",
+              "variant": "outline",
+              "size": "default",
+              "icon": "download"
+            },
+            {
+              "label": "Editar layout",
+              "url": "/edit",
+              "variant": "default",
+              "size": "default",
+              "icon": "sparkles"
+            }
+          ],
+          "showSeparator": true,
+          "padding": {
+            "top": "medium",
+            "bottom": "small"
+          }
+        }
+      },
+      {
+        "type": "Stats",
+        "props": {
+          "id": "Stats-accio-main",
+          "layout": "inline",
+          "statistics": [
+            {
+              "label": "Receita Mensal (MRR)",
+              "value": "R$ 482.900",
+              "percentage": 14.2,
+              "direction": "increase",
+              "polarity": "positive"
+            },
+            {
+              "label": "Usuários Ativos",
+              "value": "12.480",
+              "percentage": 8.4,
+              "direction": "increase",
+              "polarity": "positive"
+            },
+            {
+              "label": "Taxa de Conversão",
+              "value": "4,85%",
+              "percentage": 0.6,
+              "direction": "increase",
+              "polarity": "positive"
+            },
+            {
+              "label": "SLA de Atendimento",
+              "value": "99,4%",
+              "percentage": 0.3,
+              "direction": "decrease",
+              "polarity": "negative"
+            }
+          ],
+          "padding": {
+            "top": "small",
+            "bottom": "small"
+          }
+        }
+      },
+      {
+        "type": "FilterBar",
+        "props": {
+          "id": "FilterBar-accio-main",
+          "searchPlaceholder": "Buscar por código, organização ou responsável...",
+          "filters": [
+            {
+              "label": "Todos",
+              "active": true
+            },
+            {
+              "label": "Aprovados",
+              "active": false
+            },
+            {
+              "label": "Em análise",
+              "active": false
+            },
+            {
+              "label": "Divergências",
+              "active": false
+            }
+          ],
+          "secondaryAction": {
+            "label": "Filtros avançados",
+            "url": "",
+            "variant": "outline",
+            "size": "sm",
+            "icon": "filter"
+          },
+          "primaryAction": {
+            "label": "Aplicar",
+            "url": "",
+            "variant": "default",
+            "size": "sm",
+            "icon": "check"
+          },
+          "padding": {
+            "top": "none",
+            "bottom": "small"
+          }
+        }
+      },
+      {
+        "type": "DashboardGrid",
+        "props": {
+          "id": "DashboardGrid-accio-main",
+          "sectionTitle": "Monitoramento e Equipe",
+          "sectionDescription": "Indicadores críticos combinados com a escala administrativa ativa.",
+          "columns": "2",
+          "gap": "md",
+          "items": [
+            {
+              "type": "KpiCard",
+              "props": {
+                "id": "KpiCard-accio-main",
+                "title": "Ticket Médio Enterprise",
+                "value": "R$ 1.240,00",
+                "delta": "+11,8%",
+                "trend": "up",
+                "helperText": "Comparado aos últimos 30 dias",
+                "icon": "dollar-sign",
+                "badgeLabel": "Meta atingida",
+                "badgeVariant": "secondary"
+              }
+            },
+            {
+              "type": "UserSummaryCard",
+              "props": {
+                "id": "UserSummaryCard-accio-main",
+                "title": "Responsáveis de Plantão",
+                "description": "Operadores com acesso administrativo ativo neste turno.",
+                "members": [
+                  {
+                    "name": "Marina Costa",
+                    "role": "Líder de Operações",
+                    "initials": "MC",
+                    "avatarUrl": "",
+                    "status": "Online",
+                    "statusVariant": "default"
+                  },
+                  {
+                    "name": "Rafael Mendes",
+                    "role": "Engenharia de Plataforma",
+                    "initials": "RM",
+                    "avatarUrl": "",
+                    "status": "Em atendimento",
+                    "statusVariant": "secondary"
+                  },
+                  {
+                    "name": "Juliana Alves",
+                    "role": "Compliance & Auditoria",
+                    "initials": "JA",
+                    "avatarUrl": "",
+                    "status": "Disponível",
+                    "statusVariant": "outline"
+                  }
+                ],
+                "footerButton": {
+                  "label": "Gerenciar permissões",
+                  "url": "#permissoes",
+                  "variant": "outline",
+                  "size": "sm",
+                  "icon": "users"
+                }
+              }
+            }
+          ],
+          "padding": {
+            "top": "small",
+            "bottom": "small"
+          }
+        }
+      },
+      {
+        "type": "DataTable",
+        "props": {
+          "id": "DataTable-accio-main",
+          "title": "Movimentações Operacionais",
+          "description": "Últimas ordens e faturas processadas pelo motor financeiro.",
+          "caption": "Exibindo os registros mais recentes da competência atual.",
+          "showSearch": true,
+          "searchPlaceholder": "Filtrar por código, cliente ou status...",
+          "headers": {
+            "col1": "Código",
+            "col2": "Cliente / Organização",
+            "col3": "Valor",
+            "col4": "Atualização",
+            "status": "Situação"
+          },
+          "showColumn3": true,
+          "showColumn4": true,
+          "showStatus": true,
+          "rows": [
+            {
+              "col1": "OP-1042",
+              "col2": "Grupo Horizonte Ltda",
+              "col3": "R$ 18.400,00",
+              "col4": "Há 12 min",
+              "status": "Aprovado",
+              "statusVariant": "default"
+            },
+            {
+              "col1": "OP-1043",
+              "col2": "Vértice Logística S.A.",
+              "col3": "R$ 9.250,00",
+              "col4": "Há 38 min",
+              "status": "Em análise",
+              "statusVariant": "secondary"
+            },
+            {
+              "col1": "OP-1044",
+              "col2": "Clínica São Lucas",
+              "col3": "R$ 3.120,00",
+              "col4": "Há 2 horas",
+              "status": "Aprovado",
+              "statusVariant": "default"
+            },
+            {
+              "col1": "OP-1045",
+              "col2": "Atacado Central ME",
+              "col3": "R$ 6.780,00",
+              "col4": "Ontem",
+              "status": "Divergência",
+              "statusVariant": "destructive"
+            }
+          ],
+          "padding": {
+            "top": "small",
+            "bottom": "small"
+          }
+        }
+      },
+      {
+        "type": "FormBlock",
+        "props": {
+          "id": "FormBlock-accio-main",
+          "layout": "split",
+          "badge": {
+            "label": "Solicitações",
+            "url": "",
+            "variant": "secondary"
+          },
+          "heading": "Abrir chamado ou registrar alteração",
+          "description": "Centralize pedidos de acesso, ajustes cadastrais ou incidentes operacionais com rastreabilidade.",
+          "buttons": [],
+          "features": [
+            {
+              "icon": "check",
+              "name": "Roteamento automático",
+              "description": "Encaminhado diretamente para a fila responsável."
+            },
+            {
+              "icon": "clock",
+              "name": "Resposta dentro do SLA",
+              "description": "Notificações em tempo real para o solicitante."
+            }
+          ],
+          "form": {
+            "title": "Nova solicitação operacional",
+            "description": "Preencha os dados para registrar uma nova ocorrência ou configuração.",
+            "fields": [
+              {
+                "label": "Responsável",
+                "type": "text",
+                "name": "responsavel",
+                "placeholder": "Ex.: Ana Souza",
+                "required": true
+              },
+              {
+                "label": "E-mail corporativo",
+                "type": "email",
+                "name": "email",
+                "placeholder": "ana@empresa.com",
+                "required": true
+              },
+              {
+                "label": "Observações",
+                "type": "textarea",
+                "name": "observacoes",
+                "placeholder": "Descreva os detalhes relevantes...",
+                "required": false
+              }
+            ],
+            "action": "/api/solicitacoes",
+            "method": "post",
+            "button": {
+              "label": "Enviar solicitação",
+              "variant": "default",
+              "size": "default",
+              "icon": "move-right"
+            }
+          },
+          "padding": {
+            "top": "small",
+            "bottom": "medium"
+          }
+        }
+      },
+      {
+        "type": "Footer",
+        "props": {
+          "id": "Footer-accio-main",
+          "companyName": "AccioDesign",
+          "tagLine": "Laboratório visual de interfaces administrativas com Puck e shadcn/ui.",
+          "address": "Plataforma Operacional\nSão Paulo, SP\n© 2026 AccioDesign",
+          "navigation": [
+            {
+              "label": "Módulos",
+              "items": [
+                {
+                  "label": "Visão Geral",
+                  "url": "/"
+                },
+                {
+                  "label": "Indicadores",
+                  "url": "#indicadores"
+                },
+                {
+                  "label": "Tabelas",
+                  "url": "#tabelas"
+                }
+              ]
+            },
+            {
+              "label": "Administração",
+              "items": [
+                {
+                  "label": "Usuários",
+                  "url": "#usuarios"
+                },
+                {
+                  "label": "Auditoria",
+                  "url": "#auditoria"
+                },
+                {
+                  "label": "Configurações",
+                  "url": "#configuracoes"
+                }
+              ]
+            },
+            {
+              "label": "Editor",
+              "items": [
+                {
+                  "label": "Abrir Editor (/edit)",
+                  "url": "/edit"
+                },
+                {
+                  "label": "Documentação",
+                  "url": "#docs"
+                }
+              ]
+            }
+          ],
+          "legalLinks": [
+            {
+              "label": "Termos de uso",
+              "url": "#termos"
+            },
+            {
+              "label": "Privacidade",
+              "url": "#privacidade"
+            }
+          ],
+          "padding": {
+            "top": "medium",
+            "bottom": "medium"
+          }
+        }
+      }
+    ],
+    "zones": {}
+  }
+}

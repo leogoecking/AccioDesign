@@ -1,8 +1,12 @@
 import type { Data } from "@puckeditor/core";
 import { Render } from "@puckeditor/core";
 
-import { config } from "../../puck.config";
+import { config, EditorModeProvider } from "../../puck.config";
 
 export function PuckRender({ data }: { data: Data }) {
-  return <Render config={config} data={data} />;
+  return (
+    <EditorModeProvider isEditor={false}>
+      <Render config={config} data={data} />
+    </EditorModeProvider>
+  );
 }

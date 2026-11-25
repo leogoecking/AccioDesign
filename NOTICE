@@ -1,0 +1,31 @@
+AccioDesign
+Copyright 2026 Leonardo Goecking
+
+This product includes software and design primitives adapted from or built
+upon the following open-source projects:
+
+- Puck (`@puckeditor/core`)
+  https://github.com/puckeditor/puck
+  Licensed under the MIT License.
+
+- puck-configs (`shadcn-twblocks` reference integration)
+  https://github.com/puckeditor/puck-configs
+  Created by the Puck Contributors.
+
+- Tweakcn
+  https://github.com/jnsahaj/tweakcn
+  Licensed under the Apache License, Version 2.0.
+  See `app/theme/tweakcn/LICENSE-TWEAKCN-APACHE-2.0.txt` and
+  `THIRD_PARTY_NOTICES.md` for details of modified files.
+
+- shadcn/ui
+  https://github.com/shadcn-ui/ui
+  Licensed under the MIT License.
+
+- Radix UI Primitives
+  https://github.com/radix-ui/primitives
+  Licensed under the MIT License.
+
+- Inter Variable (`@fontsource-variable/inter`)
+  https://github.com/fontsource/font-files
+  Licensed under the SIL Open Font License 1.1.

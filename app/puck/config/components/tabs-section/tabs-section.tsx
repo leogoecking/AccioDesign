@@ -1,0 +1,67 @@
+import { registerOverlayPortal, type PuckComponent, type Slot } from "@puckeditor/core";
+import { Badge } from "~/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import {
+  CompoundContainer,
+  type CompoundContainerProps,
+} from "~/puck/components/container";
+
+export interface TabSectionItem {
+  id: string;
+  label: string;
+  badge?: string;
+  content: Slot;
+}
+
+export interface TabsSectionProps {
+  variant: "default" | "line";
+  tabs: TabSectionItem[];
+  padding?: CompoundContainerProps["padding"];
+}
+
+export const TabsSection: PuckComponent<TabsSectionProps> = ({
+  variant = "default",
+  tabs = [],
+  padding,
+}) => {
+  if (!Array.isArray(tabs) || tabs.length === 0) {
+    return <></>;
+  }
+
+  const firstTabValue = tabs[0]?.id || "tab-0";
+
+  return (
+    <CompoundContainer padding={padding}>
+      <Tabs defaultValue={firstTabValue} className="w-full">
+        <TabsList variant={variant}>
+          {tabs.map((tab, index) => {
+            const tabValue = tab.id || `tab-${index}`;
+            return (
+              <TabsTrigger
+                key={tabValue}
+                value={tabValue}
+                ref={registerOverlayPortal}
+              >
+                <span>{tab.label}</span>
+                {tab.badge ? (
+                  <Badge variant="secondary" className="ml-1 h-4 px-1.5 text-[10px]">
+                    {tab.badge}
+                  </Badge>
+                ) : null}
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+        {tabs.map((tab, index) => {
+          const tabValue = tab.id || `tab-${index}`;
+          const Content = tab.content;
+          return (
+            <TabsContent key={tabValue} value={tabValue} className="pt-4">
+              {Content ? <Content className="flex flex-col gap-4" /> : null}
+            </TabsContent>
+          );
+        })}
+      </Tabs>
+    </CompoundContainer>
+  );
+};

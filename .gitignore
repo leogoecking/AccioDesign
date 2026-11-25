@@ -1,6 +1,29 @@
+# OS & Editor
 .DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Dependencies
 /node_modules/
 
-# React Router
+# React Router & Build Caches
 /.react-router/
 /build/
+/dist/
+/.vite/
+/.cache/
+/coverage/
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*

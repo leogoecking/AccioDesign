@@ -1,0 +1,121 @@
+import { useEffect } from "react";
+import type { RootConfig } from "@puckeditor/core";
+import { cn } from "cn";
+import { TooltipProvider } from "~/components/ui/tooltip";
+import { useIsEditorMode } from "~/puck/context/is-editor-mode-context";
+import {
+  applyThemeToDocument,
+  buildThemeCssText,
+  clearThemeFromDocument,
+} from "~/theme/apply-theme";
+import {
+  createThemeFromPreset,
+  normalizeThemeDocument,
+  type AccioThemeDocument,
+} from "~/theme/schema";
+import { getThemeGoogleFontUrls } from "~/theme/tweakcn/fonts";
+
+export type RootProps = {
+  title: string;
+  description?: string;
+  surface?: "default" | "muted";
+  theme?: AccioThemeDocument;
+};
+
+const RootRenderer = ({
+  children,
+  surface = "muted",
+  theme,
+}: {
+  children: React.ReactNode;
+  surface?: "default" | "muted";
+  theme?: AccioThemeDocument;
+}) => {
+  const isEditorMode = useIsEditorMode();
+  const themeDoc = normalizeThemeDocument(theme);
+  const mode = themeDoc.activeMode;
+  const googleFontUrls = getThemeGoogleFontUrls(themeDoc.tokens[mode]);
+
+  useEffect(() => {
+    if (isEditorMode || typeof document === "undefined") {
+      return;
+    }
+
+    applyThemeToDocument(themeDoc, document);
+    return () => {
+      clearThemeFromDocument(document);
+    };
+  }, [isEditorMode, themeDoc]);
+
+  return (
+    <TooltipProvider>
+      {!isEditorMode ? (
+        <>
+          <style
+            id="accio-published-theme"
+            dangerouslySetInnerHTML={{
+              __html: buildThemeCssText(themeDoc, {
+                includeRoot: true,
+                scopeSelector: "[data-accio-theme]",
+              }),
+            }}
+          />
+          {googleFontUrls.map((url) => (
+            <link
+              key={url}
+              rel="stylesheet"
+              href={url}
+              data-accio-font="true"
+            />
+          ))}
+        </>
+      ) : null}
+      <div
+        data-accio-theme="true"
+        data-theme-preset={themeDoc.presetId}
+        data-theme-mode={mode}
+        className={cn(
+          "min-h-screen text-foreground antialiased",
+          mode === "dark" && "dark",
+          surface === "muted" ? "bg-muted/30" : "bg-background"
+        )}
+      >
+        {children}
+      </div>
+    </TooltipProvider>
+  );
+};
+
+const rootConfig: RootConfig<RootProps> = {
+  fields: {
+    title: {
+      type: "text",
+      label: "Título da página",
+    },
+    description: {
+      type: "textarea",
+      label: "Descrição",
+    },
+    surface: {
+      type: "radio",
+      label: "Fundo da página",
+      options: [
+        { label: "Padrão", value: "default" },
+        { label: "Sutil", value: "muted" },
+      ],
+    },
+  },
+  defaultProps: {
+    title: "AccioDesign — Painel Operacional",
+    description: "Laboratório visual de interfaces administrativas",
+    surface: "muted",
+    theme: createThemeFromPreset("default", "light"),
+  },
+  render: ({ children, surface, theme }) => (
+    <RootRenderer surface={surface} theme={theme}>
+      {children}
+    </RootRenderer>
+  ),
+};
+
+export default rootConfig;

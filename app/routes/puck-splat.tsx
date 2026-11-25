@@ -1,17 +1,21 @@
+import { useMemo } from "react";
 import { useFetcher, useLoaderData } from "react-router";
 import type { Data } from "@puckeditor/core";
-import { Puck, Render } from "@puckeditor/core";
+import { Puck } from "@puckeditor/core";
 
 import type { Route } from "./+types/puck-splat";
-import { config } from "../../puck.config";
+import { config, EditorModeProvider, type Data as AppData } from "../../puck.config";
+import { PuckRender } from "~/components/puck-render";
+import { createTweakcnPlugin } from "~/puck/plugins/tweakcn-plugin";
 import { resolvePuckPath } from "~/lib/resolve-puck-path.server";
 import { getPage, savePage } from "~/lib/pages.server";
+import { createThemeFromPreset } from "~/theme/schema";
 import editorStyles from "@puckeditor/core/puck.css?url";
 
 export async function loader({ params }: Route.LoaderArgs) {
   const pathname = params["*"] ?? "/";
   const { isEditorRoute, path } = resolvePuckPath(pathname);
-  let page = await getPage(path);
+  let page = (await getPage(path)) as AppData | undefined;
 
   // Throw a 404 if we're not rendering the editor and data for the page does not exist
   if (!isEditorRoute && !page) {
@@ -24,25 +28,27 @@ export async function loader({ params }: Route.LoaderArgs) {
       content: [],
       root: {
         props: {
-          title: "",
+          title: "AccioDesign",
+          theme: createThemeFromPreset("default", "light"),
         },
       },
+      zones: {},
     };
   }
 
   return {
     isEditorRoute,
     path,
-    data: page,
+    data: page as Data,
   };
 }
 
 export function meta({ data: loaderData }: Route.MetaArgs) {
   return [
     {
-      title: loaderData.isEditorRoute
-        ? `Edit: ${loaderData.path}`
-        : loaderData.data.root.props?.title ?? "",
+      title: loaderData?.isEditorRoute
+        ? `Editar: ${loaderData.path} — AccioDesign`
+        : loaderData?.data?.root?.props?.title ?? "AccioDesign",
     },
   ];
 }
@@ -58,26 +64,32 @@ export async function action({ params, request }: Route.ActionArgs) {
 function Editor() {
   const loaderData = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
+  const plugins = useMemo(() => [createTweakcnPlugin()], []);
 
   return (
     <>
       <link rel="stylesheet" href={editorStyles} id="puck-css" />
-      <Puck
-        config={config}
-        data={loaderData.data}
-        onPublish={async (data) => {
-          await fetcher.submit(
-            {
-              data,
-            },
-            {
-              action: "",
-              method: "post",
-              encType: "application/json",
-            }
-          );
-        }}
-      />
+      <EditorModeProvider isEditor>
+        <Puck
+          config={config}
+          data={loaderData.data}
+          headerTitle="AccioDesign"
+          headerPath={loaderData.path}
+          plugins={plugins}
+          onPublish={async (data) => {
+            await fetcher.submit(
+              {
+                data,
+              },
+              {
+                action: "",
+                method: "post",
+                encType: "application/json",
+              }
+            );
+          }}
+        />
+      </EditorModeProvider>
     </>
   );
 }
@@ -88,7 +100,7 @@ export default function PuckSplatRoute({ loaderData }: Route.ComponentProps) {
       {loaderData.isEditorRoute ? (
         <Editor />
       ) : (
-        <Render config={config} data={loaderData.data} />
+        <PuckRender data={loaderData.data} />
       )}
     </div>
   );
