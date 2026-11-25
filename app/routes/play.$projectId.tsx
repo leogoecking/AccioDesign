@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Check,
   ExternalLink,
+  Download,
   Monitor,
   Moon,
   Pencil,
@@ -85,6 +86,8 @@ function PlayProjectWorkspace({ project }: { project: LocalProject }) {
   const [isSaving, setIsSaving] = useState(false);
   const revision = useRef(0);
   const saving = useRef(false);
+  const exporting = useRef(false);
+  const [isExporting, setIsExporting] = useState(false);
   const bypassNavigation = useRef(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -207,6 +210,36 @@ function PlayProjectWorkspace({ project }: { project: LocalProject }) {
     bypassNavigation.current = false;
   };
 
+  const handleExport = async () => {
+    if (exporting.current || saving.current) return;
+    if (hasUnsavedChanges && !window.confirm("Há alterações não salvas. Salvar antes de exportar o design?")) return;
+    exporting.current = true;
+    setIsExporting(true);
+    setSaveError(null);
+    try {
+      const savedRevision = hasUnsavedChanges ? await persistNow() : revision.current;
+      if (savedRevision === null || revision.current !== savedRevision) return;
+      const response = await fetch(`/projects/${project.id}/export`);
+      if (!response.ok) throw new Error("Exportação falhou");
+      const blob = await response.blob();
+      if (revision.current !== savedRevision) {
+        setSaveError("Há novas alterações não salvas. Salve-as antes de exportar.");
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `acciodesign-${project.id}.zip`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      setSaveError("Não foi possível exportar o design. Tente novamente.");
+    } finally {
+      exporting.current = false;
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-white text-zinc-900">
       <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-zinc-200 bg-white px-3 sm:px-4">
@@ -313,6 +346,8 @@ function PlayProjectWorkspace({ project }: { project: LocalProject }) {
           <button
             type="button"
             data-testid="playground-save-button"
+            aria-label={isSaving ? "Salvando" : hasUnsavedChanges ? "Salvar" : "Salvo"}
+            title={isSaving ? "Salvando" : hasUnsavedChanges ? "Salvar" : "Salvo"}
             onClick={() => {
               void persistNow();
             }}
@@ -328,13 +363,26 @@ function PlayProjectWorkspace({ project }: { project: LocalProject }) {
             ) : (
               <Check className="size-3.5" />
             )}
-            <span>
+            <span className="hidden sm:inline">
               {isSaving
                 ? "Salvando..."
                 : hasUnsavedChanges
                   ? "Salvar"
                   : "Salvo"}
             </span>
+          </button>
+
+          <button
+            type="button"
+            data-testid="playground-export-button"
+            aria-label="Exportar design"
+            title="Exportar design"
+            disabled={isExporting || isSaving}
+            onClick={() => { void handleExport(); }}
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+          >
+            <Download className="size-3.5" />
+            <span className="hidden lg:inline">{isExporting ? "Exportando..." : "Exportar design"}</span>
           </button>
 
           <button

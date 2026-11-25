@@ -30,3 +30,9 @@ upon the following open-source projects:
 - Inter Variable (`@fontsource-variable/inter`)
   https://github.com/fontsource/font-files
   Licensed under the SIL Open Font License 1.1.
+
+- TokenBridge (design export and agent skill templates)
+  https://github.com/GaoDesign/tokenbridge.dev
+  Copyright (c) 2024-present GaoDesign. Licensed under the MIT License.
+  See `app/export/tokenbridge/LICENSE-TOKENBRIDGE-MIT.txt` and
+  `THIRD_PARTY_NOTICES.md` for the upstream commit and adaptations.
