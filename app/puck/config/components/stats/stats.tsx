@@ -34,7 +34,7 @@ export const Stats = ({
   return (
     <CompoundContainer padding={padding}>
       {layout === "inline" ? (
-        <div className="grid grid-cols-1 gap-4 text-start sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 text-start sm:grid-cols-2 xl:grid-cols-4">
           {statistics.map((stat, index) => (
             <Stat
               key={index}
@@ -97,12 +97,12 @@ const Stat = ({
         {direction === "decrease" ? (
           <MoveDownLeft className={directionClassName} />
         ) : null}
-        <div className="flex flex-row items-baseline gap-2.5 text-start">
-          <span className="font-heading text-3xl font-semibold tracking-tight">
+        <div className="flex flex-row flex-wrap items-baseline gap-x-2 gap-y-0.5 text-start">
+          <span className="font-heading text-2xl font-semibold tracking-tight whitespace-nowrap tabular-nums">
             {value}
           </span>
           {typeof percentage === "number" && percentage > 0 ? (
-            <span className="text-xs font-medium text-muted-foreground">
+            <span className="text-xs font-medium whitespace-nowrap text-muted-foreground tabular-nums">
               {direction === "increase" ? "+" : null}
               {direction === "decrease" ? "-" : null}
               {percentage}%

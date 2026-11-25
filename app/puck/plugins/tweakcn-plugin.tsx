@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { usePuck, type Plugin } from "@puckeditor/core";
+import { Link } from "react-router";
 import { Moon, Palette, Sun } from "lucide-react";
 import { applyThemeToDocument } from "~/theme/apply-theme";
 import { normalizeThemeDocument } from "~/theme/schema";
@@ -25,13 +26,49 @@ function ThemeIframeBridge({
   return <>{children}</>;
 }
 
-function ThemeHeaderActions({ children }: { children: ReactNode }) {
+export interface TweakcnPluginOptions {
+  galleryHref?: string;
+  playgroundHref?: string;
+  presentHref?: string;
+}
+
+function ThemeHeaderActions({
+  children,
+  options,
+}: {
+  children: ReactNode;
+  options?: TweakcnPluginOptions;
+}) {
   const { theme, setTheme } = usePuckThemeState();
   const isDark = theme.activeMode === "dark";
 
   return (
     <>
       <div className="flex items-center gap-1.5 pr-1">
+        {options?.galleryHref ? (
+          <Link
+            to={options.galleryHref}
+            className="hidden h-8 items-center rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 lg:inline-flex"
+          >
+            Galeria
+          </Link>
+        ) : null}
+        {options?.playgroundHref ? (
+          <Link
+            to={options.playgroundHref}
+            className="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Experimentar
+          </Link>
+        ) : null}
+        {options?.presentHref ? (
+          <Link
+            to={options.presentHref}
+            className="hidden h-8 items-center rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:inline-flex"
+          >
+            Apresentar
+          </Link>
+        ) : null}
         <span
           className="hidden items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 md:inline-flex"
           title={`Tema ativo: ${theme.name}`}
@@ -63,7 +100,7 @@ function ThemeHeaderActions({ children }: { children: ReactNode }) {
   );
 }
 
-export function createTweakcnPlugin(): Plugin {
+export function createTweakcnPlugin(options?: TweakcnPluginOptions): Plugin {
   return {
     name: "tweakcn",
     label: "Tema",
@@ -76,7 +113,7 @@ export function createTweakcnPlugin(): Plugin {
         </ThemeIframeBridge>
       ),
       headerActions: ({ children }) => (
-        <ThemeHeaderActions>{children}</ThemeHeaderActions>
+        <ThemeHeaderActions options={options}>{children}</ThemeHeaderActions>
       ),
     },
   };
