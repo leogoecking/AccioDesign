@@ -1,4 +1,4 @@
-import type { PuckComponent, Slot } from "@puckeditor/core";
+import type { VisualSlot } from "~/puck/components/visual-slot";
 import {
   Card,
   CardAction,
@@ -19,18 +19,18 @@ import {
 import { ErrorBoundary } from "~/puck/components/error-boundary";
 import { PuckIcon, type IconName } from "~/puck/components/icon";
 
-export interface DashboardCardProps {
+export interface DashboardCardViewProps {
   title: string;
   description?: string;
   icon?: IconName;
   badge?: CompoundBadgeProps;
   size: "default" | "sm";
   bodyText?: string;
-  content?: Slot;
+  content?: VisualSlot;
   footerButton?: CompoundButtonProps;
 }
 
-export const DashboardCard: PuckComponent<DashboardCardProps> = ({
+export const DashboardCard = ({
   title,
   description,
   icon = "none",
@@ -39,7 +39,7 @@ export const DashboardCard: PuckComponent<DashboardCardProps> = ({
   bodyText,
   content: Content,
   footerButton,
-}) => {
+}: DashboardCardViewProps) => {
   const hasIcon = Boolean(icon && icon !== "none");
 
   return (

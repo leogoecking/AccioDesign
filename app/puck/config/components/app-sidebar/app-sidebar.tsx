@@ -1,4 +1,4 @@
-import type { PuckComponent, Slot } from "@puckeditor/core";
+import type { VisualSlot } from "~/puck/components/visual-slot";
 import { cn } from "cn";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
@@ -25,7 +25,7 @@ import {
 import { ErrorBoundary } from "~/puck/components/error-boundary";
 import { PuckIcon, type IconName } from "~/puck/components/icon";
 import { useIsEditorMode } from "~/puck/context/is-editor-mode-context";
-import { useLayoutMode } from "~/puck/context/layout-mode-context";
+import { useLayoutMode } from "~/puck/context/visual-layout-context";
 
 export interface SidebarNavItem {
   label: string;
@@ -40,7 +40,7 @@ export interface SidebarNavGroup {
   items: SidebarNavItem[];
 }
 
-export interface AppSidebarProps {
+export interface AppSidebarViewProps {
   brandName: string;
   brandSubtitle?: string;
   brandIcon?: IconName;
@@ -51,14 +51,14 @@ export interface AppSidebarProps {
     initials?: string;
   };
   bordered?: boolean;
-  content: Slot;
+  content: VisualSlot;
 }
 
 function getAllNavItems(groups: SidebarNavGroup[]): SidebarNavItem[] {
   return groups.flatMap((group) => group.items || []);
 }
 
-export const AppSidebar: PuckComponent<AppSidebarProps> = ({
+export const AppSidebar = ({
   brandName,
   brandSubtitle,
   brandIcon = "layout-dashboard",
@@ -66,7 +66,7 @@ export const AppSidebar: PuckComponent<AppSidebarProps> = ({
   user,
   bordered = true,
   content: Content,
-}) => {
+}: AppSidebarViewProps) => {
   const isEditorMode = useIsEditorMode();
   const { navigationMode, density } = useLayoutMode();
   const flatItems = getAllNavItems(groups);

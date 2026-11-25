@@ -1,27 +1,27 @@
-import type { PuckComponent, Slot } from "@puckeditor/core";
+import type { VisualSlot } from "~/puck/components/visual-slot";
 import { cn } from "cn";
 import {
   CompoundContainer,
   type CompoundContainerProps,
 } from "~/puck/components/container";
 
-export interface DashboardGridProps {
+export interface DashboardGridViewProps {
   sectionTitle?: string;
   sectionDescription?: string;
   columns: "1" | "2" | "3" | "4";
   gap: "sm" | "md" | "lg";
-  items: Slot;
+  items: VisualSlot;
   padding?: CompoundContainerProps["padding"];
 }
 
-export const DashboardGrid: PuckComponent<DashboardGridProps> = ({
+export const DashboardGrid = ({
   sectionTitle,
   sectionDescription,
   columns = "2",
   gap = "md",
   items: Items,
   padding,
-}) => {
+}: DashboardGridViewProps) => {
   const gridColsClass = {
     "1": "grid-cols-1",
     "2": "grid-cols-1 md:grid-cols-2",

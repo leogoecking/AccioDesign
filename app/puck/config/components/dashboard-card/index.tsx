@@ -1,8 +1,8 @@
-import type { ComponentConfig } from "@puckeditor/core";
+import type { ComponentConfig, Slot } from "@puckeditor/core";
 import { badge, button, icon } from "~/puck/config/fields";
-import { DashboardCard, type DashboardCardProps } from "./dashboard-card";
+import { DashboardCard, type DashboardCardViewProps } from "./dashboard-card";
 
-export type { DashboardCardProps };
+export type DashboardCardProps = Omit<DashboardCardViewProps, "content"> & { content?: Slot };
 
 export const conf: ComponentConfig<DashboardCardProps> = {
   label: "Card Administrativo",

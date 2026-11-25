@@ -11,7 +11,9 @@ upon the following open-source projects:
 - puck-configs (`shadcn-twblocks` reference integration)
   https://github.com/puckeditor/puck-configs
   Created by the Puck Contributors.
-  License note: the reference checkout used during Phase 1 did not include a root LICENSE file; no unconfirmed license is attributed to it.
+  Project-copy permission: see the shadcn-twblocks integration README at
+  commit 29ab421d096f7ca5294f8a521b5e7ee94ae9944f. No general repository
+  license was confirmed. See THIRD_PARTY_NOTICES.md.
 
 - Tweakcn
   https://github.com/jnsahaj/tweakcn

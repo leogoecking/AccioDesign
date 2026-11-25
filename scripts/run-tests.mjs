@@ -2,32 +2,35 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { build } from "esbuild";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const repoRoot = path.resolve(__dirname, "..");
+const repoRoot = fileURLToPath(new URL("../", import.meta.url));
 const outDir = path.join(repoRoot, ".cache", `accio-tests-${process.pid}`);
 const outFile = path.join(outDir, "phase3.test.mjs");
 
-fs.mkdirSync(outDir, { recursive: true });
-
 try {
-  execFileSync(
-    path.join(repoRoot, "node_modules", ".bin", "esbuild"),
-    [
-      path.join(repoRoot, "tests", "phase3.test.ts"),
-      "--bundle",
-      "--platform=node",
-      "--format=esm",
-      "--packages=external",
-      "--loader:.css=text",
-      `--outfile=${outFile}`,
-    ],
-    {
-      cwd: repoRoot,
-      stdio: "inherit",
-    }
-  );
+  await build({
+    absWorkingDir: repoRoot,
+    entryPoints: ["tests/phase3.test.ts"],
+    bundle: true,
+    platform: "node",
+    format: "esm",
+    packages: "external",
+    outfile: outFile,
+    plugins: [{
+      name: "vite-raw-imports",
+      setup(builder) {
+        builder.onResolve({ filter: /\?raw$/ }, args => ({
+          path: path.resolve(args.resolveDir, args.path.slice(0, -4)),
+          namespace: "raw",
+        }));
+        builder.onLoad({ filter: /.*/, namespace: "raw" }, args => ({
+          contents: fs.readFileSync(args.path, "utf8"),
+          loader: "text",
+        }));
+      },
+    }],
+  });
 
   execFileSync(process.execPath, ["--test", outFile], {
     cwd: repoRoot,

@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import { buildReactFiles } from "./react-export.server";
 import { assertNoCredentials } from "./validate-export.server";
 import type { LocalProject } from "~/lib/projects.server";
 import { buildThemeCssText } from "~/theme/apply-theme";
@@ -34,6 +35,7 @@ export function buildDesignFiles(project: LocalProject): Record<string, string> 
     "DESIGN.md": makeDesignMd(project, theme),
     "SKILL.md": SKILL_MD,
     "components.md": makeComponentsMd(project),
+    ...buildReactFiles(project, theme, css),
   };
 }
 

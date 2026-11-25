@@ -83,7 +83,6 @@ Disponível tanto no **Modo Experimentar** quanto como plugin nativo (**Tema**) 
 - A persistência é baseada em arquivos JSON locais (`.accio-data/`) voltada para uso individual/local, sem controle de concorrência multiusuário, autenticação ou banco de dados externo.
 - No Modo Experimentar, alterações em cores individuais avançadas, sombras detalhadas e importação/exportação CSS/JSON continuam concentradas na aba **Tema** dentro do Modo Editar (Puck), mantendo o provador focado em decisão rápida (presets, Claro/Escuro, navegação, tipografia, densidade e cantos).
 - A alternância de navegação (`Sidebar`, `Rail`, `Topo`) aplica-se a templates e páginas que utilizam o bloco `AppSidebar`; estruturas em branco ou sem `AppSidebar` não exibem esse controle.
-- A integração com TokenBridge e a exportação completa de pacotes estruturados para agentes implementadores permanecem planejadas para fases seguintes.
 
 ---
 
@@ -188,4 +187,30 @@ No modo **Experimentar**, use **Exportar design**. Havendo alterações pendente
 
 O AccioDesign é a fonte de verdade. Valores de cores não são convertidos nem derivados na exportação; as sombras compostas seguem o cálculo já empregado no preview. O `theme.css` usa as mesmas regras visuais compartilhadas pelo app, incluindo tipografia e container. No projeto de destino, instale **Tailwind CSS v4**, `tw-animate-css`, `shadcn` (com `shadcn/tailwind.css`) e `@fontsource-variable/inter`, e processe o CSS com Tailwind; mantenha esses pacotes disponíveis para resolver os imports. `@fontsource-variable/inter` fornece a fonte Inter Variable padrão. Para fontes diferentes selecionadas em Light ou Dark, disponibilize as famílias indicadas em `tokens.json` por meio de arquivos locais ou de um provedor de fontes escolhido pelo projeto de destino. O ZIP não contém arquivos de fontes nem baixa fontes adicionais. A aplicação deve ativar a classe `.dark` quando necessário; o modo selecionado está no manifesto.
 
-O modelo do TokenBridge pressupõe cores de sucesso, aviso e informação, escalas tipográficas e de espaçamento, além de configurações de componentes que não fazem parte do tema AccioDesign. Esses campos são listados como não mapeados, sem valores inventados. O inventário descreve dependências diretas conhecidas dos componentes locais; não gera código executável nem garante equivalência de bibliotecas no projeto de destino. O pacote inclui o conteúdo inserido no projeto: revise-o antes de compartilhar. A exportação rejeita campos e padrões de credenciais comuns, mas não é possível identificar todos os segredos em texto livre; arquivos de ambiente e outros projetos não são lidos para compor o ZIP. Consulte [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md#5-tokenbridge) para a proveniência e licença MIT do TokenBridge.
+O modelo do TokenBridge pressupõe cores de sucesso, aviso e informação, escalas tipográficas e de espaçamento, além de configurações de componentes que não fazem parte do tema AccioDesign. Esses campos são listados como não mapeados, sem valores inventados. O inventário descreve dependências diretas conhecidas dos componentes locais. A pasta frontend descrita abaixo fornece a implementação executável. O pacote inclui o conteúdo inserido no projeto: revise-o antes de compartilhar. A exportação rejeita campos e padrões de credenciais comuns, mas não é possível identificar todos os segredos em texto livre; arquivos de ambiente e outros projetos não são lidos para compor o ZIP. Consulte [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md#5-tokenbridge) para a proveniência e licença MIT do TokenBridge.
+
+## Frontend React executável (Fase 5)
+
+**Exportar design** também inclui `frontend/`, com um projeto React + TypeScript + Vite. Extraia o ZIP, entre em `frontend/` e use Node.js 20.19+.
+
+```sh
+npm install
+npm run typecheck
+npm run dev
+```
+
+`npm run build` gera `dist/` para hospedagem estática. O frontend não depende do servidor do AccioDesign, do Puck ou de clones upstream. O npm instala as dependências declaradas e suas transitivas. O diretório contém seu próprio README, licenças e atribuições.
+
+O exportador parte dos slots declarados na configuração Puck e inclui apenas os blocos usados no documento salvo, inclusive os aninhados. Os 20 componentes do [catálogo](./app/puck/index.tsx) têm suporte. As views são os mesmos arquivos usados pela apresentação. O layout compartilhado aplica a densidade e a variante de navegação. O CSS é idêntico ao `theme.css` do contrato e carrega os dois modos com o modo salvo ativo. Um catálogo de fontes de código empacotado com o servidor restringe os arquivos que podem entrar no ZIP.
+
+Para conectar dados reais, comece em `frontend/src/main.tsx` e substitua gradualmente os dados demonstrativos de `frontend/src/design.json`. Mantenha as props visuais, a ordem dos slots e os tokens. Formulários, links e filtros preservam o comportamento da apresentação. Integrações com APIs e regras de negócio são responsabilidade do projeto de destino.
+
+O exportador rejeita tipos de componente desconhecidos ou slots malformados. As zonas legadas sem consumidor no catálogo ficam preservadas no JSON. Links e imagens remotas fornecidos no documento mantêm suas URLs. Inter Variable e as famílias dos três templates são instaladas localmente pelo npm. O README do pacote indica outras famílias a fornecer para obter a tipografia aprovada. Consulte a [permissão de cópia documentada pelo puck-configs](./THIRD_PARTY_NOTICES.md#2-puck--puck-configs-shadcn-twblocks) para o uso dos componentes no projeto extraído.
+
+### Verificação do pacote
+
+Os três templates e a estrutura em branco foram exportados, extraídos fora do repositório e passaram por instalação, typecheck, build e execução do `dist/` no Chromium. Foram comparados 12 pares de capturas da apresentação original e do ZIP em 1440×900, 768×1024 e 390×844. As combinações foram Sistema administrativo (claro, sidebar), Dashboard operacional (escuro, rail compacto), Central de atendimento (escuro, topo confortável) e Em branco (claro).
+
+Sistema administrativo e Em branco coincidiram na comparação de imagens. Dashboard e Central tiveram pequenas diferenças na métrica normalizada do ImageMagick (até 0,018%) nas condições testadas. A comparação também verificou texto renderizado, modo, navegação, densidade, família tipográfica, fundo, cor do texto, espaçamento e raio. O filtro da tabela demonstrativa foi exercitado no frontend extraído.
+
+Para reproduzir, inicie o AccioDesign com um `ACCIO_DATA_DIR` temporário na porta 5199. Execute `node tests/executable-export.mjs` e passe o diretório impresso a `node tests/executable-export.browser.mjs <diretório>`. O primeiro script usa npm e unzip. O segundo usa agent-browser e ImageMagick e grava os PNGs e o relatório em `capturas/` no diretório temporário.
