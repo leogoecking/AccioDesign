@@ -30,6 +30,7 @@ export interface TweakcnPluginOptions {
   galleryHref?: string;
   playgroundHref?: string;
   presentHref?: string;
+  saveAction?: ReactNode;
 }
 
 function ThemeHeaderActions({
@@ -95,7 +96,7 @@ function ThemeHeaderActions({
           <span className="hidden sm:inline">{isDark ? "Dark" : "Light"}</span>
         </button>
       </div>
-      {children}
+      {options?.saveAction ?? children}
     </>
   );
 }
