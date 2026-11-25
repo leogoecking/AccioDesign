@@ -1,11 +1,13 @@
 import { useMemo } from "react";
-import { useFetcher, useLoaderData } from "react-router";
+import { useLoaderData } from "react-router";
 import type { Data } from "@puckeditor/core";
 import { Puck } from "@puckeditor/core";
 
 import type { Route } from "./+types/puck-splat";
 import { config, EditorModeProvider, type Data as AppData } from "../../puck.config";
 import { PuckRender } from "~/components/puck-render";
+import { EditorSaveButton, EditorSaveProvider, useEditorSave } from "~/puck/editor-save";
+import { puckDictionaryPtBr, puckViewportsPtBr } from "~/puck/dictionary-pt-br";
 import { createTweakcnPlugin } from "~/puck/plugins/tweakcn-plugin";
 import { resolvePuckPath } from "~/lib/resolve-puck-path.server";
 import { getPage, savePage } from "~/lib/pages.server";
@@ -63,33 +65,31 @@ export async function action({ params, request }: Route.ActionArgs) {
 
 function Editor() {
   const loaderData = useLoaderData<typeof loader>();
-  const fetcher = useFetcher<typeof action>();
-  const plugins = useMemo(() => [createTweakcnPlugin()], []);
+  const save = useEditorSave(loaderData.data, `${loaderData.path === "/" ? "" : loaderData.path}/edit`);
+  const plugins = useMemo(() => [createTweakcnPlugin({ saveAction: <EditorSaveButton /> })], []);
 
   return (
     <>
       <link rel="stylesheet" href={editorStyles} id="puck-css" />
-      <EditorModeProvider isEditor>
-        <Puck
-          config={config}
-          data={loaderData.data}
-          headerTitle="AccioDesign"
-          headerPath={loaderData.path}
-          plugins={plugins}
-          onPublish={async (data) => {
-            await fetcher.submit(
-              {
-                data,
-              },
-              {
-                action: "",
-                method: "post",
-                encType: "application/json",
-              }
-            );
-          }}
-        />
-      </EditorModeProvider>
+      {save.saveError && (
+        <div role="alert" className="border-b border-red-200 bg-red-50 px-4 py-1.5 text-xs font-medium text-red-700">
+          Não foi possível salvar as alterações locais. Tente novamente.
+        </div>
+      )}
+      <EditorSaveProvider value={save}>
+        <EditorModeProvider isEditor>
+          <Puck
+            config={config}
+            data={loaderData.data}
+            headerTitle="AccioDesign"
+            headerPath={loaderData.path}
+            plugins={plugins}
+            dictionary={puckDictionaryPtBr}
+            viewports={puckViewportsPtBr}
+            onChange={save.onChange}
+          />
+        </EditorModeProvider>
+      </EditorSaveProvider>
     </>
   );
 }
