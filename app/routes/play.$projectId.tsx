@@ -166,8 +166,8 @@ function PlayProjectWorkspace({ project }: { project: LocalProject }) {
     }));
   };
 
-  const persistNow = async (): Promise<boolean> => {
-    if (saving.current) return false;
+  const persistNow = async (): Promise<number | null> => {
+    if (saving.current) return null;
     saving.current = true;
     const savedRevision = revision.current;
     setIsSaving(true);
@@ -183,15 +183,15 @@ function PlayProjectWorkspace({ project }: { project: LocalProject }) {
       });
       if (!response.ok) {
         setSaveError("Não foi possível salvar as alterações locais.");
-        return false;
+        return null;
       }
-      if (revision.current !== savedRevision) return false;
-      setHasUnsavedChanges(false);
       await revalidator.revalidate();
-      return true;
+      if (revision.current !== savedRevision) return null;
+      setHasUnsavedChanges(false);
+      return savedRevision;
     } catch {
       setSaveError("Erro ao comunicar com o servidor local ao salvar.");
-      return false;
+      return null;
     } finally {
       saving.current = false;
       setIsSaving(false);
@@ -200,7 +200,8 @@ function PlayProjectWorkspace({ project }: { project: LocalProject }) {
 
 
   const handleNavigateSaving = async (targetPath: string) => {
-    if (hasUnsavedChanges && !(await persistNow())) return;
+    const savedRevision = hasUnsavedChanges ? await persistNow() : revision.current;
+    if (savedRevision === null || revision.current !== savedRevision) return;
     bypassNavigation.current = true;
     navigate(targetPath);
     bypassNavigation.current = false;
