@@ -1,6 +1,6 @@
+import { useEditorOverlayRef } from "~/puck/context/is-editor-mode-context";
 import { Fragment, useState } from "react";
 import { Menu, MoveRight, X } from "lucide-react";
-import { registerOverlayPortal } from "@puckeditor/core";
 import { cn } from "cn";
 import { Button } from "~/components/ui/button";
 import {
@@ -50,6 +50,7 @@ export const Header = ({
   primaryNavigation,
   secondaryNavigation,
 }: HeaderProps) => {
+  const overlayRef = useEditorOverlayRef();
   const [isOpen, setOpen] = useState(false);
   const isEditorMode = useIsEditorMode();
 
@@ -76,7 +77,7 @@ export const Header = ({
                         <>
                           <NavigationMenuTrigger
                             className="text-sm font-medium"
-                            ref={registerOverlayPortal}
+                            ref={overlayRef}
                           >
                             {item.label}
                           </NavigationMenuTrigger>
@@ -159,7 +160,7 @@ export const Header = ({
               variant="ghost"
               size="icon-sm"
               onClick={() => setOpen(!isOpen)}
-              ref={registerOverlayPortal}
+              ref={overlayRef}
               aria-label={isOpen ? "Fechar menu" : "Abrir menu"}
             >
               {isOpen ? (

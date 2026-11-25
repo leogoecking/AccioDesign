@@ -27,7 +27,9 @@ python3 - "$zip_file" <<'PY'
 import json, sys, zipfile
 with zipfile.ZipFile(sys.argv[1]) as archive:
     assert archive.testzip() is None
-    assert set(archive.namelist()) == {'manifest.json', 'design.json', 'tokens.json', 'theme.css', 'DESIGN.md', 'SKILL.md', 'components.md'}
+    assert {name for name in archive.namelist() if "/" not in name} == {'manifest.json', 'design.json', 'tokens.json', 'theme.css', 'DESIGN.md', 'SKILL.md', 'components.md'}
+    assert 'frontend/src/main.tsx' in archive.namelist()
+    assert archive.read('frontend/src/design.json') == archive.read('design.json')
     assert json.loads(archive.read('manifest.json'))['project']['name'] == 'Exportação confirmada'
 PY
 # Failed archive request reports an error without mutating the saved project.

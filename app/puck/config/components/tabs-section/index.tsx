@@ -1,8 +1,8 @@
-import type { ComponentConfig } from "@puckeditor/core";
+import type { ComponentConfig, Slot } from "@puckeditor/core";
 import { padding, paddingDefaults } from "~/puck/config/fields";
-import { TabsSection, type TabsSectionProps } from "./tabs-section";
+import { TabsSection, type TabsSectionViewProps } from "./tabs-section";
 
-export type { TabsSectionProps };
+export type TabsSectionProps = Omit<TabsSectionViewProps, "tabs"> & { tabs: Array<Omit<TabsSectionViewProps["tabs"][number], "content"> & { content: Slot }> };
 
 export const conf: ComponentConfig<TabsSectionProps> = {
   label: "Seção com Abas",

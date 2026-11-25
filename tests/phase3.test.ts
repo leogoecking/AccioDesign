@@ -469,3 +469,68 @@ describe("Fase 4 — contrato visual", () => {
     });
   });
 });
+
+describe("Fase 5 — frontend React exportado", () => {
+  it("inclui as 20 views e dependências permitidas sem incorporar o editor", async () => {
+    const { buildDesignFiles } = await import("../app/export/design-export.server");
+    const blank = instantiateTemplate("em-branco");
+    const data = {
+      ...blank,
+      content: Object.entries(config.components).map(([type, entry]) => ({
+        type, props: { ...entry.defaultProps, id: type },
+      })),
+    } as typeof blank;
+    const files = buildDesignFiles({
+      id: "proj-all", name: "Catálogo", templateId: "em-branco",
+      createdAt: "", updatedAt: "", data,
+    });
+
+    for (const type of Object.keys(config.components)) {
+      assert.match(files["frontend/src/main.tsx"], new RegExp(`\\b${type}: \\{ view: ${type}`));
+    }
+    assert.match(files["frontend/src/main.tsx"], /"tabs":\{"kind":"array","fields":\{"content":"slot"\}\}/);
+    assert.match(files["frontend/src/main.tsx"], /"items":"slot"/);
+    assert.equal(files["frontend/src/theme.css"], files["theme.css"]);
+    assert.equal(files["frontend/src/design.json"], files["design.json"]);
+    const pkg = JSON.parse(files["frontend/package.json"]);
+    for (const dependency of ["react", "react-dom", "radix-ui", "lucide-react", "shadcn"]) {
+      assert.ok(pkg.dependencies[dependency], dependency);
+    }
+    assert.ok(!("jszip" in pkg.dependencies));
+    assert.ok(!("@puckeditor/core" in pkg.dependencies));
+    for (const [file, source] of Object.entries(files)) {
+      if (!file.startsWith("frontend/src/") || !/\.tsx?$/.test(file)) continue;
+      assert.doesNotMatch(source, /from ["']@puckeditor\/core/);
+      assert.doesNotMatch(file, /(?:\.server\.|package-lock|\.env|node_modules|puck\/config\/components\/.+\/index\.tsx)/);
+    }
+  });
+
+  it("segue slots aninhados e não interpreta propriedades comuns ou caminhos como módulos", async () => {
+    const { buildDesignFiles } = await import("../app/export/design-export.server");
+    const data = instantiateTemplate("em-branco");
+    const project = {
+      id: "proj-slots", name: "Slots", templateId: "em-branco", createdAt: "", updatedAt: "", data,
+    };
+    data.content = [{
+      type: "TabsSection",
+      props: {
+        id: "tabs", variant: "default",
+        tabs: [{
+          id: "tab", label: "Tab",
+          content: [{ type: "Divider", props: { id: "divider", spacing: "md" } }],
+        }],
+        extra: [{ type: "../.env", props: { id: "ignored" } }],
+      },
+    }] as unknown as typeof data.content;
+    const files = buildDesignFiles(project);
+    assert.match(files["frontend/src/main.tsx"], /view: Divider/);
+    assert.doesNotMatch(files["frontend/src/main.tsx"], /\.env|DashboardGrid/);
+    const viewFiles = Object.keys(files).filter(file => file.startsWith("frontend/src/puck/config/components/"));
+    assert.equal(viewFiles.length, 2);
+    assert.deepStrictEqual(JSON.parse(files["frontend/src/design.json"]), data);
+
+    const unsupported = structuredClone(project);
+    unsupported.data.content[0].type = "../.env" as never;
+    assert.throws(() => buildDesignFiles(unsupported), /Componente sem suporte/);
+  });
+});

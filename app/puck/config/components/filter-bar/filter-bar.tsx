@@ -1,6 +1,6 @@
+import { useEditorOverlayRef } from "~/puck/context/is-editor-mode-context";
 import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
-import { registerOverlayPortal } from "@puckeditor/core";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
@@ -33,6 +33,7 @@ export const FilterBar = ({
   secondaryAction,
   padding,
 }: FilterBarProps) => {
+  const overlayRef = useEditorOverlayRef();
   const [searchValue, setSearchValue] = useState("");
   const [activeState, setActiveState] = useState<boolean[]>(() =>
     filters.map((filter) => Boolean(filter.active))
@@ -59,7 +60,7 @@ export const FilterBar = ({
                 aria-hidden="true"
               />
               <Input
-                ref={registerOverlayPortal}
+                ref={overlayRef}
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 placeholder={searchPlaceholder}
@@ -73,7 +74,7 @@ export const FilterBar = ({
                 return (
                   <Button
                     key={`${filter.label}-${index}`}
-                    ref={registerOverlayPortal}
+                    ref={overlayRef}
                     type="button"
                     size="sm"
                     variant={isActive ? "default" : "outline"}

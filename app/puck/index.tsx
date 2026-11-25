@@ -1,4 +1,4 @@
-import type { Config as PuckConfig, Data as PuckData } from "@puckeditor/core";
+import { registerOverlayPortal, type Config as PuckConfig, type Data as PuckData } from "@puckeditor/core";
 
 import Header, { type HeaderProps } from "~/puck/config/components/header";
 import AppSidebar, {
@@ -54,6 +54,10 @@ import FilterBar, {
   type FilterBarProps,
 } from "~/puck/config/components/filter-bar";
 
+import {
+  EditorModeProvider as VisualEditorModeProvider,
+  type EditorModeProviderProps,
+} from "~/puck/context/is-editor-mode-context";
 import rootConfig, { type RootProps } from "~/puck/components/root";
 
 export type Props = {
@@ -149,9 +153,9 @@ export const config: Config = {
 export type Data = PuckData<Props, RootProps>;
 
 export { ErrorBoundary } from "~/puck/components/error-boundary";
-export {
-  EditorModeProvider,
-  useIsEditorMode,
-} from "~/puck/context/is-editor-mode-context";
+export function EditorModeProvider(props: EditorModeProviderProps) {
+  return <VisualEditorModeProvider {...props} overlayRef={props.isEditor ? registerOverlayPortal : undefined} />;
+}
+export { useIsEditorMode } from "~/puck/context/is-editor-mode-context";
 
 export default config;

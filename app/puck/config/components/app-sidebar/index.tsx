@@ -1,8 +1,8 @@
-import type { ComponentConfig } from "@puckeditor/core";
+import type { ComponentConfig, Slot } from "@puckeditor/core";
 import { booleanRadio, icon } from "~/puck/config/fields";
-import { AppSidebar, type AppSidebarProps } from "./app-sidebar";
+import { AppSidebar, type AppSidebarViewProps } from "./app-sidebar";
 
-export type { AppSidebarProps };
+export type AppSidebarProps = Omit<AppSidebarViewProps, "content"> & { content: Slot };
 
 export const conf: ComponentConfig<AppSidebarProps> = {
   label: "Sidebar Lateral",

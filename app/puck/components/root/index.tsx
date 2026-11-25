@@ -1,14 +1,10 @@
 import { useEffect } from "react";
 import type { RootConfig } from "@puckeditor/core";
-import { cn } from "cn";
-import { TooltipProvider } from "~/components/ui/tooltip";
+import { RootLayout } from "./root-layout";
 import { useIsEditorMode } from "~/puck/context/is-editor-mode-context";
-import {
-  LayoutModeProvider,
-  normalizeNavigationMode,
-  normalizeVisualDensity,
-  type NavigationMode,
-  type VisualDensity,
+import type {
+  NavigationMode,
+  VisualDensity,
 } from "~/puck/context/layout-mode-context";
 import {
   applyThemeToDocument,
@@ -46,8 +42,6 @@ const RootRenderer = ({
 }) => {
   const isEditorMode = useIsEditorMode();
   const themeDoc = normalizeThemeDocument(theme);
-  const resolvedNavMode = normalizeNavigationMode(navigationMode);
-  const resolvedDensity = normalizeVisualDensity(density);
   const mode = themeDoc.activeMode;
   const googleFontUrls = getThemeGoogleFontUrls(themeDoc.tokens[mode]);
 
@@ -63,48 +57,38 @@ const RootRenderer = ({
   }, [isEditorMode, themeDoc]);
 
   return (
-    <TooltipProvider>
-      <LayoutModeProvider
-        navigationMode={resolvedNavMode}
-        density={resolvedDensity}
-      >
-        {!isEditorMode ? (
-          <>
-            <style
-              id="accio-published-theme"
-              dangerouslySetInnerHTML={{
-                __html: buildThemeCssText(themeDoc, {
-                  includeRoot: true,
-                  scopeSelector: "[data-accio-theme]",
-                }),
-              }}
+    <>
+      {!isEditorMode ? (
+        <>
+          <style
+            id="accio-published-theme"
+            dangerouslySetInnerHTML={{
+              __html: buildThemeCssText(themeDoc, {
+                includeRoot: true,
+                scopeSelector: "[data-accio-theme]",
+              }),
+            }}
+          />
+          {googleFontUrls.map((url) => (
+            <link
+              key={url}
+              rel="stylesheet"
+              href={url}
+              data-accio-font="true"
             />
-            {googleFontUrls.map((url) => (
-              <link
-                key={url}
-                rel="stylesheet"
-                href={url}
-                data-accio-font="true"
-              />
-            ))}
-          </>
-        ) : null}
-        <div
-          data-accio-theme="true"
-          data-theme-preset={themeDoc.presetId}
-          data-theme-mode={mode}
-          data-navigation-mode={resolvedNavMode}
-          data-density={resolvedDensity}
-          className={cn(
-            "min-h-screen text-foreground antialiased",
-            mode === "dark" && "dark",
-            surface === "muted" ? "bg-muted/30" : "bg-background"
-          )}
-        >
-          {children}
-        </div>
-      </LayoutModeProvider>
-    </TooltipProvider>
+          ))}
+        </>
+      ) : null}
+      <RootLayout
+        surface={surface}
+        navigationMode={navigationMode}
+        density={density}
+        mode={mode}
+        presetId={themeDoc.presetId}
+      >
+        {children}
+      </RootLayout>
+    </>
   );
 };
 

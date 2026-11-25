@@ -1,6 +1,6 @@
+import { useEditorOverlayRef } from "~/puck/context/is-editor-mode-context";
 import { useState } from "react";
 import { Search } from "lucide-react";
-import { registerOverlayPortal } from "@puckeditor/core";
 import { Badge } from "~/components/ui/badge";
 import {
   Card,
@@ -67,6 +67,7 @@ export const DataTable = ({
   rows = [],
   padding,
 }: DataTableProps) => {
+  const overlayRef = useEditorOverlayRef();
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -95,7 +96,7 @@ export const DataTable = ({
                 aria-hidden="true"
               />
               <Input
-                ref={registerOverlayPortal}
+                ref={overlayRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={searchPlaceholder}

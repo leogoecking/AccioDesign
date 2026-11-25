@@ -1,8 +1,8 @@
-import type { ComponentConfig } from "@puckeditor/core";
+import type { ComponentConfig, Slot } from "@puckeditor/core";
 import { padding, paddingDefaults } from "~/puck/config/fields";
-import { DashboardGrid, type DashboardGridProps } from "./dashboard-grid";
+import { DashboardGrid, type DashboardGridViewProps } from "./dashboard-grid";
 
-export type { DashboardGridProps };
+export type DashboardGridProps = Omit<DashboardGridViewProps, "items"> & { items: Slot };
 
 export const conf: ComponentConfig<DashboardGridProps> = {
   label: "Grade de Dashboard",
