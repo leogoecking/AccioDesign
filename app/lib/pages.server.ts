@@ -1,29 +1,62 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs/promises";
+import fs from "node:fs/promises";
+import path from "node:path";
 import type { Data } from "@puckeditor/core";
+import {
+  resolveDataDir,
+  resolveSeedDatabasePath,
+  type StorePathOptions,
+} from "./data-paths.server";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const databasePath = path.join(__dirname, "..", "..", "database.json");
-
-export async function getPage(path: string) {
-  const pages = await readDatabase();
-  return pages[path];
+function getLegacyStorePath(options?: StorePathOptions): string {
+  return path.join(resolveDataDir(options), "legacy-pages.json");
 }
 
-export async function savePage(path: string, data: Data) {
-  const pages = await readDatabase();
-  pages[path] = data;
-  await fs.writeFile(databasePath, JSON.stringify(pages), { encoding: "utf8" });
-}
-
-async function readDatabase() {
+async function readJsonMap(filePath: string): Promise<Record<string, Data>> {
   try {
-    const file = await fs.readFile(databasePath, "utf8");
-    return JSON.parse(file) as Record<string, Data>;
+    const content = await fs.readFile(filePath, "utf8");
+    const parsed = JSON.parse(content);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return {};
+    }
+    return parsed as Record<string, Data>;
   } catch (error: unknown) {
-    console.error(error);
+    const code = (error as NodeJS.ErrnoException | undefined)?.code;
+    if (code !== "ENOENT") {
+      console.error(`Falha ao ler arquivo de páginas (${filePath}):`, error);
+    }
     return {};
   }
+}
+
+export async function getPage(
+  pagePath: string,
+  options?: StorePathOptions
+): Promise<Data | undefined> {
+  const localPages = await readJsonMap(getLegacyStorePath(options));
+  if (Object.prototype.hasOwnProperty.call(localPages, pagePath)) {
+    return localPages[pagePath];
+  }
+
+  // Fallback estritamente somente leitura para o seed versionado
+  const seedPages = await readJsonMap(resolveSeedDatabasePath(options));
+  return seedPages[pagePath];
+}
+
+export async function savePage(
+  pagePath: string,
+  data: Data,
+  options?: StorePathOptions
+): Promise<void> {
+  const dataDir = resolveDataDir(options);
+  const storePath = getLegacyStorePath(options);
+
+  await fs.mkdir(dataDir, { recursive: true });
+  const localPages = await readJsonMap(storePath);
+  localPages[pagePath] = data;
+
+  const tempPath = `${storePath}.${process.pid}.${Date.now()}.tmp`;
+  await fs.writeFile(tempPath, JSON.stringify(localPages, null, 2), {
+    encoding: "utf8",
+  });
+  await fs.rename(tempPath, storePath);
 }

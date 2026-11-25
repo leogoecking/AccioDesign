@@ -27,3 +27,7 @@ Thumbs.db
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
+
+# Local Workspace Data (User Projects & Working State)
+/.accio-data/
+/docs/screenshots/.tmp/

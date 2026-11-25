@@ -1,57 +1,89 @@
 # AccioDesign
 
-**Laboratório visual local para experimentar, personalizar e aprovar interfaces e identidades visuais antes da implementação por agentes de IA ou equipes de engenharia.**
+**Laboratório visual local para escolher estruturas prontas, experimentar identidades visuais e aprovar interfaces antes da implementação por agentes de IA ou equipes de engenharia.**
 
-Construído sobre [Puck](https://github.com/puckeditor/puck), [shadcn/ui](https://ui.shadcn.com/), [Tweakcn](https://github.com/jnsahaj/tweakcn), [Tailwind CSS v4](https://tailwindcss.com/) e [React Router 7](https://reactrouter.com/), o AccioDesign une composição visual por blocos administrativos com um provador de temas em tempo real — tudo rodando localmente, sem dependência de serviços pagos, autenticação ou nuvem proprietária.
+Construído sobre [Puck](https://github.com/puckeditor/puck), [shadcn/ui](https://ui.shadcn.com/), [Tweakcn](https://github.com/jnsahaj/tweakcn), [Tailwind CSS v4](https://tailwindcss.com/) e [React Router 7](https://reactrouter.com/), o AccioDesign funciona como um **provador visual de interfaces**: escolha um template ou comece em branco, teste 43 temas, tipografia, densidade e estilo de navegação em tempo real e edite blocos no Puck apenas quando necessário — tudo localmente, sem serviços pagos, autenticação ou nuvem proprietária.
 
 ---
 
-## Objetivo
+## Fluxo de experimentação em 3 modos
 
-Antes de iniciar o desenvolvimento de um sistema administrativo, painel operacional ou aplicação web — especialmente em fluxos assistidos por agentes de IA — é comum precisar validar layout, hierarquia de informação, paleta semântica, tipografia, arredondamento e contraste **em componentes reais**.
+| Modo | Rota | Papel no fluxo |
+| --- | --- | --- |
+| **Gallery (Início)** | `/` | Escolha um dos 3 templates iniciais, inicie uma estrutura em branco ou retome projetos salvos localmente. |
+| **Experimentar (Playground)** | `/play/:projectId` | Provador visual rápido: alterne entre 43 presets Tweakcn, Claro/Escuro, tipografia, densidade, arredondamento, modo de navegação (`Sidebar`, `Rail compacto`, `Topo`) e viewports (`Desktop`, `Tablet`, `Mobile`) sem alterar o conteúdo do documento. |
+| **Editar (Puck)** | `/projects/:projectId/edit` | Editor visual completo do Puck para reorganizar, editar propriedades, adicionar ou remover os 20 blocos disponíveis, com o plugin `Tema` integrado e Undo/Redo nativo. |
+| **Apresentar** | `/projects/:projectId` | Renderização limpa e fiel para revisão ou demonstração, usando os mesmos componentes React e o tema persistido do projeto. |
 
-O AccioDesign resolve essa etapa como um **laboratório visual local**:
+Rotas legadas (`/*/edit` e `/*`) permanecem funcionais para compatibilidade com páginas criadas anteriormente.
 
-1. **Monte** telas administrativas arrastando componentes reais de dashboard (`Header`, `AppSidebar`, `Stats`, `KpiCard`, `DataTable`, `FilterBar`, `FormBlock` etc.).
-2. **Experimente** identidades visuais com presets do Tweakcn e ajuste tokens em tempo real dentro do iframe de preview, sem afetar a interface do próprio editor.
-3. **Aprove e persista** o layout e o tema escolhido localmente em JSON estruturado, prontos para inspeção em página publicada e futura exportação para ferramentas e agentes.
+---
+
+## Capturas de tela
+
+### Galeria inicial e projetos locais
+![Galeria inicial do AccioDesign](./docs/screenshots/gallery-desktop.png)
+
+### Modo Experimentar (Desktop, Tablet e Escuro + Menu Superior)
+![Modo Experimentar — Sistema administrativo](./docs/screenshots/playground-admin-desktop.png)
+
+![Modo Experimentar — Central de atendimento com Kanban em Dark e Menu Superior](./docs/screenshots/playground-kanban-dark-topnav.png)
+
+![Modo Experimentar — Visualização Tablet](./docs/screenshots/playground-tablet.png)
+
+### Modo Apresentar
+![Modo Apresentar — Dashboard operacional](./docs/screenshots/present-dashboard-desktop.png)
 
 ---
 
 ## Funcionalidades disponíveis (Implementadas)
 
-### Editor Visual (Puck + React Router 7)
-- Edição visual com drag-and-drop, slots aninhados, edição inline (`contentEditable`), responsividade por viewports e histórico nativo (**Undo / Redo**).
-- Rotas dinâmicas: qualquer caminho `/minha-rota/edit` abre o editor visual; ao publicar, `/minha-rota` passa a renderizar a página publicada com SSR e hidratação React.
-- Persistência local em arquivo ([database.json](./database.json)) por padrão, incluindo um painel operacional demonstrativo pré-configurado em `/`.
+### Galeria e 3 Templates Iniciais
+- **Sistema administrativo:** navegação lateral adaptável, trilha de navegação (`BreadcrumbNav`), indicadores de carteira, barra de busca e filtros, listagem corporativa e formulário de cadastro rápido.
+- **Dashboard operacional:** KPIs de disponibilidade e latência, saúde dos serviços (`StatusBadgeGroup`), card financeiro (`KpiCard`), equipe de plantão e tabela de movimentações recentes.
+- **Central de atendimento:** indicadores de SLA, quadro visual de chamados editável (`KanbanBoard`), atendentes em linha e métricas por canal.
+- **Estrutura em branco:** ponto de partida limpo para composição livre no editor Puck.
 
 ### Catálogo Administrativo (`shadcn/ui` + `Radix UI`)
-19 componentes configurados em [app/puck/index.tsx](./app/puck/index.tsx), organizados em 6 categorias no painel do Puck e editáveis pelas propriedades nativas:
+20 componentes configurados em [app/puck/index.tsx](./app/puck/index.tsx), organizados em 6 categorias no painel do Puck e editáveis pelas propriedades nativas:
 
-- **Navegação:** `Header`, `AppSidebar`, `BreadcrumbNav`, `Footer`
-- **Layout:** `PageHeader`, `DashboardGrid`, `TabsSection`, `Bento`, `Divider`
+- **Navegação:** `Header`, `AppSidebar` (compatível com modos `Sidebar`, `Rail compacto` e `Menu superior`), `BreadcrumbNav`, `Footer`
+- **Layout:** `PageHeader`, `DashboardGrid`, `TabsSection`, `Bento`, `KanbanBoard`, `Divider`
 - **Cards:** `DashboardCard`, `CardGrid`, `UserSummaryCard`
 - **Indicadores:** `Stats`, `KpiCard`, `StatusBadgeGroup`
 - **Tabelas:** `DataTable` (com busca ao vivo no cliente), `KeyValueTable`
 - **Formulários:** `FormBlock`, `FilterBar`
 
-Todos os componentes respeitam o contexto `EditorModeProvider`, evitando navegação acidental de links ou submissão de formulários durante a edição e mantendo comportamento interativo na página publicada.
-
 ### Provador Visual de Identidades (Tweakcn)
-Integrado como plugin nativo na barra lateral esquerda do Puck (**Tema**) e na barra superior de ações rápidas:
+Disponível tanto no **Modo Experimentar** quanto como plugin nativo (**Tema**) no editor Puck:
 
-- **Catálogo visual com 43 presets:** tema padrão do AccioDesign + todos os **42 presets built-in do Tweakcn**, exibidos com nome e amostras de cores.
-- **Personalização em tempo real:**
-  - Cores semânticas (`primary`, `secondary`, `background`, `foreground`, `card`, `popover`, `muted`, `accent`, `destructive`, `border`, `input`, `ring`, `chart-1..5` e tokens `sidebar-*`).
-  - Tipografia (`font-sans`, `font-serif`, `font-mono` com carregamento dinâmico de Google Fonts e `letter-spacing`).
-  - Bordas (`radius`), escala de espaçamento (`spacing`) e sombras (`shadow-color`, `opacity`, `blur`, `spread`, `offset-x/y`).
-  - Alternância instantânea entre **Light** e **Dark**.
-- **Isolamento do editor e paridade publicada:** o tema é aplicado exclusivamente ao `#preview-frame` do Puck durante a edição (a UI do editor permanece neutra) e é renderizado no SSR + hidratação da página publicada.
-- **Persistência local, exportação e importação segura:**
-  - Tema ativo salvo no documento da página (`root.props.theme`) em `database.json` ao publicar.
-  - Biblioteca local de snapshots nomeados em `localStorage`.
-  - Exportação em **JSON estruturado** (`schemaVersion: "1.0"`, preparado para evolução futura) e **CSS Tailwind v4** (`OKLCH`, `HSL`, `HEX` ou `RGB`).
-  - Importação de JSON com allowlist estrita de tokens e sanitização contra CSS/HTML inseguro.
+- **43 identidades visuais:** tema padrão do AccioDesign + 42 presets built-in do Tweakcn com amostras de cor.
+- **Personalização em tempo real:** cores semânticas, tipografia (`font-sans`, `font-serif`, `font-mono` via Google Fonts), densidade visual (`spacing`), arredondamento (`radius`), sombras e alternância **Claro / Escuro**.
+- **Troca de navegação não destrutiva:** alternar entre `Sidebar`, `Rail compacto` e `Menu superior` altera apenas `root.props.navigationMode` via contexto React, preservando integralmente blocos, slots e dados.
+- **Isolamento do editor:** a identidade visual do próprio AccioDesign (Galeria, Playground e chrome do Puck) permanece neutra e independente do tema aplicado dentro do iframe de preview.
+
+### Segurança e Persistência Local
+- **Separação entre seed demonstrativo e dados de trabalho:**
+  - [database.json](./database.json) versionado no repositório atua estritamente como **seed demonstrativo somente leitura** e nunca é sobrescrito por ações de usuário.
+  - Projetos criados ou editados pelo usuário são gravados localmente em `.accio-data/projects.json` (e rotas legadas em `.accio-data/legacy-pages.json`), ambos **ignorados pelo Git** via [.gitignore](./.gitignore).
+  - Na primeira execução após a atualização, páginas customizadas existentes fora do seed padrão são migradas automaticamente para `.accio-data/projects.json` sem perda de dados.
+- **Zero serviços externos obrigatórios:** funciona 100% offline/local (apenas Google Fonts opcionais para fontes não locais).
+- **Sanitização de temas importados:** allowlist estrita de tokens e bloqueio de CSS/JS inseguro em [app/theme/schema.ts](./app/theme/schema.ts).
+
+---
+
+## Decisões arquiteturais e limitações conhecidas
+
+### Decisões arquiteturais
+1. **Preview isolado por portal em `<iframe>` no Modo Experimentar:** em [app/components/playground/preview-frame.tsx](./app/components/playground/preview-frame.tsx), o preview utiliza `<Render>` do Puck com os mesmos componentes React da página publicada dentro de um `<iframe>` sincronizado com as folhas de estilo do app e com `applyThemeToDocument(themeDoc, iframeDoc)`. Isso garante responsividade real por media queries (`Desktop`, `Tablet`, `Mobile`), isolamento total entre o tema testado e o chrome da ferramenta, além de paridade visual com o Modo Apresentar.
+2. **Estado visual concentrado em `root.props`:** tema (`root.props.theme`), densidade (`root.props.density`) e modo de navegação (`root.props.navigationMode`) ficam em `root.props` do mesmo documento Puck (`AppData`), permitindo transição direta entre **Experimentar**, **Editar** e **Apresentar** sem duplicar formatos ou reconstruir blocos.
+3. **Suite de testes sem novas dependências externas:** `npm test` usa `esbuild` (já presente via Vite) + `node:test` nativo do Node.js para validar geração de templates, preservação de conteúdo, isolamento de persistência e integridade do catálogo Puck.
+
+### Limitações conhecidas
+- A persistência é baseada em arquivos JSON locais (`.accio-data/`) voltada para uso individual/local, sem controle de concorrência multiusuário, autenticação ou banco de dados externo.
+- No Modo Experimentar, alterações em cores individuais avançadas, sombras detalhadas e importação/exportação CSS/JSON continuam concentradas na aba **Tema** dentro do Modo Editar (Puck), mantendo o provador focado em decisão rápida (presets, Claro/Escuro, navegação, tipografia, densidade e cantos).
+- A alternância de navegação (`Sidebar`, `Rail`, `Topo`) aplica-se a templates e páginas que utilizam o bloco `AppSidebar`; estruturas em branco ou sem `AppSidebar` não exibem esse controle.
+- A integração com TokenBridge e a exportação completa de pacotes estruturados para agentes implementadores permanecem planejadas para fases seguintes.
 
 ---
 
@@ -64,6 +96,7 @@ Integrado como plugin nativo na barra lateral esquerda do Puck (**Tema**) e na b
 | Editor Visual | `@puckeditor/core` 0.24 |
 | Design System & UI | Tailwind CSS v4 (`@tailwindcss/vite`), shadcn/ui (`radix-rhea`), Radix UI, Lucide |
 | Temas & Tokens | Módulos adaptados do Tweakcn (Apache 2.0) |
+| Testes Automatizados | `node:test` + `esbuild` |
 
 ---
 
@@ -88,13 +121,15 @@ npm run dev
 ```
 
 Após iniciar o servidor:
-- **Página publicada (painel demonstrativo):** `http://localhost:5173/`
-- **Editor visual (Puck + Tweakcn):** `http://localhost:5173/edit`
-- **Nova página em qualquer rota:** acesse `http://localhost:5173/minha-pagina/edit`, monte a interface e clique em **Publish** para visualizar em `http://localhost:5173/minha-pagina`.
+- **Galeria inicial:** `http://localhost:5173/`
+- **Modo Experimentar:** clique em **Experimentar** em qualquer template para abrir `/play/:projectId`
+- **Modo Editar (Puck + Tweakcn):** `/projects/:projectId/edit`
+- **Modo Apresentar:** `/projects/:projectId`
 
 ### Scripts disponíveis
 
 ```bash
+npm test            # Executa a suíte de testes automatizados (node:test + esbuild)
 npm run typecheck   # Gera rotas tipadas do React Router e executa tsc
 npm run build       # Gera os bundles client e SSR em ./build
 npm run start       # Inicia o servidor de produção via react-router-serve
@@ -105,7 +140,7 @@ npm run start       # Inicia o servidor de produção via react-router-serve
 ## Projetos open source utilizados
 
 - **[Puck](https://github.com/puckeditor/puck)** — Editor visual open source para React (MIT).
-- **[puck-configs](https://github.com/puckeditor/puck-configs)** — Configurações de referência `shadcn-twblocks` que serviram de base para os blocos iniciais.
+- **[puck-configs](https://github.com/puckeditor/puck-configs)** — Configurações de referência `shadcn-twblocks` que serviram de base para os blocos iniciais *(sem arquivo `LICENSE` próprio confirmado na raiz do checkout utilizado; nenhuma licença não confirmada é atribuída a ele)*.
 - **[Tweakcn](https://github.com/jnsahaj/tweakcn)** — Presets, gerador de tokens Tailwind v4, sombras e manipulação de temas (Apache 2.0).
 - **[shadcn/ui](https://github.com/shadcn-ui/ui)** — Primitivos e convenções de interface (MIT).
 - **[Radix UI](https://github.com/radix-ui/primitives)** — Primitivos acessíveis de UI (MIT).
@@ -117,15 +152,15 @@ npm run start       # Inicia o servidor de produção via react-router-serve
 
 ### Implementado
 - [x] Estrutura base com Puck + React Router 7 + Vite + Tailwind CSS v4
-- [x] Catálogo administrativo shadcn/ui com 19 blocos em 6 categorias
-- [x] Integração do Tweakcn como plugin nativo no Puck (`Tema`), com 43 presets, editor de tokens em tempo real e Light/Dark
-- [x] Isolamento visual do editor host em relação ao iframe de preview e paridade com a página publicada
-- [x] Persistência local (`database.json` + `localStorage`), exportação JSON/CSS v4 e importação JSON sanitizada
+- [x] Catálogo administrativo shadcn/ui com 20 blocos em 6 categorias (incluindo `KanbanBoard`)
+- [x] Integração do Tweakcn como plugin nativo no Puck (`Tema`), com 43 presets, editor de tokens em tempo real e Claro/Escuro
+- [x] Galeria visual inicial, 3 templates completos em pt-BR e fluxo unificado em 3 modos (**Experimentar**, **Editar**, **Apresentar**)
+- [x] Troca instantânea de navegação (`Sidebar`, `Rail compacto`, `Menu superior`), densidade e tipografia preservando dados do documento
+- [x] Separação entre seed demonstrativo versionado (`database.json`) e projetos locais ignorados pelo Git (`.accio-data/`)
 
 ### Planejado (próximas etapas)
 - [ ] **Integração com TokenBridge:** sincronização bidirecional e validação de contratos de design tokens para handoff padronizado.
 - [ ] **Exportação para agentes de IA:** geração de pacotes de contexto (estrutura de componentes Puck + tokens aprovados + diretrizes visuais) prontos para consumo por agentes implementadores.
-- [ ] **Biblioteca de templates administrativos:** páginas iniciais prontas (visão executiva, CRUD/tabelas, configurações e onboarding) para acelerar experimentações.
 - [ ] **Comparação rápida entre identidades:** visualização lado a lado e histórico nomeado de variações aprovadas.
 
 ---

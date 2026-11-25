@@ -20,6 +20,9 @@ import TabsSection, {
 } from "~/puck/config/components/tabs-section";
 import Bento, { type BentoProps } from "~/puck/config/components/bento";
 import Divider, { type DividerProps } from "~/puck/config/components/divider";
+import KanbanBoard, {
+  type KanbanBoardProps,
+} from "~/puck/config/components/kanban-board";
 
 import DashboardCard, {
   type DashboardCardProps,
@@ -63,6 +66,7 @@ export type Props = {
   TabsSection: TabsSectionProps;
   Bento: BentoProps;
   Divider: DividerProps;
+  KanbanBoard: KanbanBoardProps;
   DashboardCard: DashboardCardProps;
   CardGrid: CardGridProps;
   UserSummaryCard: UserSummaryCardProps;
@@ -92,6 +96,7 @@ export const config: Config = {
         "DashboardGrid",
         "TabsSection",
         "Bento",
+        "KanbanBoard",
         "Divider",
       ],
     },
@@ -125,6 +130,7 @@ export const config: Config = {
     DashboardGrid,
     TabsSection,
     Bento,
+    KanbanBoard,
     Divider,
     DashboardCard,
     CardGrid,

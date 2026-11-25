@@ -44,7 +44,7 @@ export const KpiCard = ({
 
   return (
     <ErrorBoundary>
-      <Card size="sm" className="h-full justify-between">
+      <Card size="sm" className="h-full">
         <CardHeader className="flex flex-row items-center justify-between gap-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
             {title}
@@ -62,7 +62,7 @@ export const KpiCard = ({
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <span className="font-heading text-3xl font-semibold tracking-tight">
+            <span className="font-heading text-3xl font-semibold tracking-tight tabular-nums">
               {value}
             </span>
             {delta ? (

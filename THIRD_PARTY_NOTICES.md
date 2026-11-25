@@ -27,7 +27,8 @@ Para mais detalhes, consulte também [app/theme/tweakcn/THIRD_PARTY_NOTICES.md](
 ## 2. Puck & `puck-configs` (`shadcn-twblocks`)
 
 - **Puck (`@puckeditor/core`):** https://github.com/puckeditor/puck — Licença **MIT**
-- **Referência `puck-configs` (`shadcn-twblocks`):** https://github.com/puckeditor/puck-configs *(nota: o checkout de referência utilizado não possuía arquivo `LICENSE` próprio na raiz do repositório `puck-configs`; a autoria original pertence aos mantenedores e contribuidores do Puck).*
+- **Referência `puck-configs` (`shadcn-twblocks`):** https://github.com/puckeditor/puck-configs *(nota: o checkout de referência utilizado não possuía arquivo `LICENSE` próprio confirmado na raiz do repositório `puck-configs`; portanto, nenhuma licença não confirmada é atribuída a ele, e a autoria original pertence aos mantenedores e contribuidores do Puck).*
+- **Separação de autoria na Fase 3:** Os novos módulos da Gallery (`app/components/gallery/`, `app/routes/_index.tsx`), Modo Experimentar (`app/components/playground/`, `app/routes/play.$projectId.tsx`), persistência local isolada (`app/lib/projects.server.ts`), templates pt-BR (`app/templates/`) e o bloco `KanbanBoard` (`app/puck/config/components/kanban-board/`) foram escritos originalmente para o AccioDesign sob Apache 2.0, reutilizando os primitivos shadcn/ui e módulos Tweakcn listados neste documento.
 - **Arquivos e padrões adaptados:**
   - Estrutura de aplicação React Router + Puck (`puck.config.tsx`, `app/routes/puck-splat.tsx`, `app/lib/pages.server.ts`, `app/lib/resolve-puck-path.server.ts`).
   - Infraestrutura em `app/puck/`: `context/is-editor-mode-context.tsx`, `components/error-boundary.tsx`, `components/badge.tsx`, `components/button.tsx`, `components/card.tsx`, `components/container.tsx`, `components/content.tsx`, `components/field.tsx`, `components/form.tsx` e `config/fields/index.tsx`.

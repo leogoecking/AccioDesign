@@ -4,6 +4,13 @@ import { cn } from "cn";
 import { TooltipProvider } from "~/components/ui/tooltip";
 import { useIsEditorMode } from "~/puck/context/is-editor-mode-context";
 import {
+  LayoutModeProvider,
+  normalizeNavigationMode,
+  normalizeVisualDensity,
+  type NavigationMode,
+  type VisualDensity,
+} from "~/puck/context/layout-mode-context";
+import {
   applyThemeToDocument,
   buildThemeCssText,
   clearThemeFromDocument,
@@ -19,20 +26,28 @@ export type RootProps = {
   title: string;
   description?: string;
   surface?: "default" | "muted";
+  navigationMode?: NavigationMode;
+  density?: VisualDensity;
   theme?: AccioThemeDocument;
 };
 
 const RootRenderer = ({
   children,
   surface = "muted",
+  navigationMode = "sidebar",
+  density = "default",
   theme,
 }: {
   children: React.ReactNode;
   surface?: "default" | "muted";
+  navigationMode?: NavigationMode;
+  density?: VisualDensity;
   theme?: AccioThemeDocument;
 }) => {
   const isEditorMode = useIsEditorMode();
   const themeDoc = normalizeThemeDocument(theme);
+  const resolvedNavMode = normalizeNavigationMode(navigationMode);
+  const resolvedDensity = normalizeVisualDensity(density);
   const mode = themeDoc.activeMode;
   const googleFontUrls = getThemeGoogleFontUrls(themeDoc.tokens[mode]);
 
@@ -49,39 +64,46 @@ const RootRenderer = ({
 
   return (
     <TooltipProvider>
-      {!isEditorMode ? (
-        <>
-          <style
-            id="accio-published-theme"
-            dangerouslySetInnerHTML={{
-              __html: buildThemeCssText(themeDoc, {
-                includeRoot: true,
-                scopeSelector: "[data-accio-theme]",
-              }),
-            }}
-          />
-          {googleFontUrls.map((url) => (
-            <link
-              key={url}
-              rel="stylesheet"
-              href={url}
-              data-accio-font="true"
-            />
-          ))}
-        </>
-      ) : null}
-      <div
-        data-accio-theme="true"
-        data-theme-preset={themeDoc.presetId}
-        data-theme-mode={mode}
-        className={cn(
-          "min-h-screen text-foreground antialiased",
-          mode === "dark" && "dark",
-          surface === "muted" ? "bg-muted/30" : "bg-background"
-        )}
+      <LayoutModeProvider
+        navigationMode={resolvedNavMode}
+        density={resolvedDensity}
       >
-        {children}
-      </div>
+        {!isEditorMode ? (
+          <>
+            <style
+              id="accio-published-theme"
+              dangerouslySetInnerHTML={{
+                __html: buildThemeCssText(themeDoc, {
+                  includeRoot: true,
+                  scopeSelector: "[data-accio-theme]",
+                }),
+              }}
+            />
+            {googleFontUrls.map((url) => (
+              <link
+                key={url}
+                rel="stylesheet"
+                href={url}
+                data-accio-font="true"
+              />
+            ))}
+          </>
+        ) : null}
+        <div
+          data-accio-theme="true"
+          data-theme-preset={themeDoc.presetId}
+          data-theme-mode={mode}
+          data-navigation-mode={resolvedNavMode}
+          data-density={resolvedDensity}
+          className={cn(
+            "min-h-screen text-foreground antialiased",
+            mode === "dark" && "dark",
+            surface === "muted" ? "bg-muted/30" : "bg-background"
+          )}
+        >
+          {children}
+        </div>
+      </LayoutModeProvider>
     </TooltipProvider>
   );
 };
@@ -104,15 +126,31 @@ const rootConfig: RootConfig<RootProps> = {
         { label: "Sutil", value: "muted" },
       ],
     },
+    navigationMode: {
+      type: "radio",
+      label: "Modo de navegação",
+      options: [
+        { label: "Sidebar", value: "sidebar" },
+        { label: "Rail compacto", value: "rail" },
+        { label: "Menu superior", value: "topnav" },
+      ],
+    },
   },
   defaultProps: {
     title: "AccioDesign — Painel Operacional",
     description: "Laboratório visual de interfaces administrativas",
     surface: "muted",
+    navigationMode: "sidebar",
+    density: "default",
     theme: createThemeFromPreset("default", "light"),
   },
-  render: ({ children, surface, theme }) => (
-    <RootRenderer surface={surface} theme={theme}>
+  render: ({ children, surface, navigationMode, density, theme }) => (
+    <RootRenderer
+      surface={surface}
+      navigationMode={navigationMode}
+      density={density}
+      theme={theme}
+    >
       {children}
     </RootRenderer>
   ),
