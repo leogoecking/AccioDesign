@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { usePuck, type Plugin } from "@puckeditor/core";
+import { Link } from "react-router";
 import { Moon, Palette, Sun } from "lucide-react";
 import { applyThemeToDocument } from "~/theme/apply-theme";
 import { normalizeThemeDocument } from "~/theme/schema";
@@ -45,28 +46,28 @@ function ThemeHeaderActions({
     <>
       <div className="flex items-center gap-1.5 pr-1">
         {options?.galleryHref ? (
-          <a
-            href={options.galleryHref}
+          <Link
+            to={options.galleryHref}
             className="hidden h-8 items-center rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 lg:inline-flex"
           >
             Galeria
-          </a>
+          </Link>
         ) : null}
         {options?.playgroundHref ? (
-          <a
-            href={options.playgroundHref}
+          <Link
+            to={options.playgroundHref}
             className="inline-flex h-8 items-center rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
           >
             Experimentar
-          </a>
+          </Link>
         ) : null}
         {options?.presentHref ? (
-          <a
-            href={options.presentHref}
+          <Link
+            to={options.presentHref}
             className="hidden h-8 items-center rounded-md border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 sm:inline-flex"
           >
             Apresentar
-          </a>
+          </Link>
         ) : null}
         <span
           className="hidden items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700 md:inline-flex"

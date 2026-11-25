@@ -290,3 +290,71 @@ describe("AccioDesign Fase 3 — Templates, Persistência Isolada e Compatibilid
     }
   });
 });
+
+describe("Hardening da persistência", () => {
+  it("recusa arquivos corrompidos ou ilegíveis sem sobrescrevê-los", async () => {
+    await withTempStore(async ({ dataDir, seedDatabasePath }) => {
+      await fs.mkdir(dataDir, { recursive: true });
+      const projectsPath = path.join(dataDir, "projects.json");
+      for (const invalid of ["{", JSON.stringify({ version: 1, migratedSeed: true, projects: null })]) {
+        await fs.writeFile(projectsPath, invalid);
+        await assert.rejects(createProjectFromTemplate("em-branco", "Teste", { dataDir, seedDatabasePath }));
+        assert.equal(await fs.readFile(projectsPath, "utf8"), invalid);
+      }
+      await fs.rm(projectsPath);
+      const legacyPath = path.join(dataDir, "legacy-pages.json");
+      await fs.writeFile(legacyPath, "[");
+      await assert.rejects(savePage("/novo", instantiateTemplate("em-branco"), { dataDir, seedDatabasePath }));
+      await assert.rejects(listProjects({ dataDir, seedDatabasePath }));
+      assert.equal(await fs.readFile(legacyPath, "utf8"), "[");
+      await fs.rm(legacyPath);
+      await fs.mkdir(legacyPath); // EISDIR, independent of the user's privileges
+      await assert.rejects(getPage("/", { dataDir, seedDatabasePath }));
+      await assert.rejects(savePage("/novo", instantiateTemplate("em-branco"), { dataDir, seedDatabasePath }));
+      assert.equal((await fs.stat(legacyPath)).isDirectory(), true);
+      await fs.rm(legacyPath, { recursive: true });
+      await fs.writeFile(seedDatabasePath, "{");
+      await assert.rejects(listProjects({ dataDir, seedDatabasePath }));
+      await assert.rejects(getPage("/", { dataDir, seedDatabasePath }));
+      await assert.rejects(fs.stat(projectsPath), { code: "ENOENT" });
+    });
+  });
+
+  it("migra alterações visuais na raiz mesmo com o primeiro ID original", async () => {
+    await withTempStore(async ({ dataDir, seedDatabasePath, seedSnapshot }) => {
+      assert.equal((await listProjects({ dataDir, seedDatabasePath })).length, 0);
+      const custom = JSON.parse(seedSnapshot);
+      custom["/"].root.props.theme = createThemeFromPreset("violet-bloom", "dark");
+      assert.equal(custom["/"].content[0].props.id, "Header-accio-main");
+      await fs.writeFile(seedDatabasePath, JSON.stringify(custom));
+      const migrated = await listProjects({ dataDir: `${dataDir}-custom`, seedDatabasePath });
+      assert.equal(migrated.length, 1);
+      assert.equal(migrated[0].data.root?.props?.theme?.presetId, "violet-bloom");
+      assert.equal(migrated[0].data.root?.props?.theme?.activeMode, "dark");
+      assert.equal(JSON.parse(await fs.readFile(seedDatabasePath, "utf8"))["/"].content[0].props.id, "Header-accio-main");
+      const bothDir = `${dataDir}-both`;
+      await fs.mkdir(bothDir, { recursive: true });
+      const local = instantiateTemplate("em-branco", "Página local");
+      await fs.writeFile(path.join(bothDir, "legacy-pages.json"), JSON.stringify({ "/": local }));
+      const both = await listProjects({ dataDir: bothDir, seedDatabasePath });
+      assert.equal(both.length, 2);
+      assert.ok(both.some(project => project.name === "Página local"));
+      assert.ok(both.some(project => project.data.root?.props?.theme?.presetId === "violet-bloom"));
+    });
+  });
+
+  it("serializa inicialização, criações, atualizações e páginas legadas concorrentes", async () => {
+    await withTempStore(async ({ dataDir, seedDatabasePath }) => {
+      const options = { dataDir, seedDatabasePath };
+      const projects = await Promise.all(Array.from({ length: 30 }, (_, i) => createProjectFromTemplate("em-branco", `Projeto ${i}`, options)));
+      assert.equal((await listProjects(options)).length, 30);
+      await Promise.all(projects.map((project, i) => saveProject(project.id, { name: `Atualizado ${i}` }, options)));
+      const stored = await listProjects(options);
+      assert.equal(stored.length, 30);
+      assert.equal(stored.filter(project => project.name.startsWith("Atualizado ")).length, 30);
+      await Promise.all(Array.from({ length: 30 }, (_, i) => savePage(`/pagina-${i}`, instantiateTemplate("em-branco", `Página ${i}`), options)));
+      const pages = await Promise.all(Array.from({ length: 30 }, (_, i) => getPage(`/pagina-${i}`, options)));
+      assert.equal(pages.filter(Boolean).length, 30);
+    });
+  });
+});

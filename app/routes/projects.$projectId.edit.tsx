@@ -1,10 +1,10 @@
-import { useMemo } from "react";
-import { useFetcher } from "react-router";
+import { useMemo, useRef, useState } from "react";
 import type { Data } from "@puckeditor/core";
 import { Puck } from "@puckeditor/core";
 import editorStyles from "@puckeditor/core/puck.css?url";
 import type { Route } from "./+types/projects.$projectId.edit";
 import { getProject, saveProject } from "~/lib/projects.server";
+import { useUnsavedChanges } from "~/hooks/use-unsaved-changes";
 import { createTweakcnPlugin } from "~/puck/plugins/tweakcn-plugin";
 import { config, EditorModeProvider, type Data as AppData } from "../../puck.config";
 
@@ -36,7 +36,12 @@ export async function action({ params, request }: Route.ActionArgs) {
 
 export default function EditProjectRoute({ loaderData }: Route.ComponentProps) {
   const { project } = loaderData;
-  const fetcher = useFetcher<typeof action>();
+  const saved = useRef(JSON.stringify(project.data));
+  const current = useRef(saved.current);
+  const saving = useRef(false);
+  const [dirty, setDirty] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+  useUnsavedChanges(dirty);
 
   const plugins = useMemo(
     () => [
@@ -52,6 +57,7 @@ export default function EditProjectRoute({ loaderData }: Route.ComponentProps) {
   return (
     <>
       <link rel="stylesheet" href={editorStyles} id="puck-css" />
+      {saveError && <div role="alert">Não foi possível salvar as alterações locais.</div>}
       <EditorModeProvider isEditor>
         <Puck
           config={config}
@@ -59,15 +65,29 @@ export default function EditProjectRoute({ loaderData }: Route.ComponentProps) {
           headerTitle="AccioDesign"
           headerPath={project.name}
           plugins={plugins}
+          onChange={(data) => {
+            current.current = JSON.stringify(data);
+            setDirty(current.current !== saved.current);
+          }}
           onPublish={async (data) => {
-            await fetcher.submit(
-              { data },
-              {
-                action: "",
-                method: "post",
-                encType: "application/json",
-              }
-            );
+            if (saving.current) return;
+            saving.current = true;
+            const snapshot = JSON.stringify(data);
+            try {
+              const response = await fetch(`/projects/${project.id}/edit`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ data }),
+              });
+              if (!response.ok) throw new Error("Falha ao salvar");
+              saved.current = snapshot;
+              setDirty(current.current !== snapshot);
+              setSaveError(false);
+            } catch {
+              setSaveError(true);
+            } finally {
+              saving.current = false;
+            }
           }}
         />
       </EditorModeProvider>

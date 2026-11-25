@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useNavigate, useRevalidator } from "react-router";
 import type { Data } from "@puckeditor/core";
 import {
@@ -43,6 +43,7 @@ import {
   normalizeThemeDocument,
   type AccioThemeDocument,
 } from "~/theme/schema";
+import { useUnsavedChanges } from "~/hooks/use-unsaved-changes";
 import type { ThemeMode } from "~/theme/tweakcn/types";
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -82,7 +83,12 @@ function PlayProjectWorkspace({ project }: { project: LocalProject }) {
   const [controlsOpen, setControlsOpen] = useState(true);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const revision = useRef(0);
+  const saving = useRef(false);
+  const bypassNavigation = useRef(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  useUnsavedChanges(hasUnsavedChanges, bypassNavigation);
 
   const rootProps = (docData.root?.props ?? {}) as Partial<RootProps>;
   const themeDoc = normalizeThemeDocument(rootProps.theme);
@@ -108,6 +114,7 @@ function PlayProjectWorkspace({ project }: { project: LocalProject }) {
         },
       };
     });
+    revision.current++;
     setHasUnsavedChanges(true);
     setSaveError(null);
   };
@@ -160,6 +167,9 @@ function PlayProjectWorkspace({ project }: { project: LocalProject }) {
   };
 
   const persistNow = async (): Promise<boolean> => {
+    if (saving.current) return false;
+    saving.current = true;
+    const savedRevision = revision.current;
     setIsSaving(true);
     setSaveError(null);
     try {
@@ -175,6 +185,7 @@ function PlayProjectWorkspace({ project }: { project: LocalProject }) {
         setSaveError("Não foi possível salvar as alterações locais.");
         return false;
       }
+      if (revision.current !== savedRevision) return false;
       setHasUnsavedChanges(false);
       await revalidator.revalidate();
       return true;
@@ -182,16 +193,17 @@ function PlayProjectWorkspace({ project }: { project: LocalProject }) {
       setSaveError("Erro ao comunicar com o servidor local ao salvar.");
       return false;
     } finally {
+      saving.current = false;
       setIsSaving(false);
     }
   };
 
+
   const handleNavigateSaving = async (targetPath: string) => {
-    if (hasUnsavedChanges) {
-      const saved = await persistNow();
-      if (!saved) return;
-    }
+    if (hasUnsavedChanges && !(await persistNow())) return;
+    bypassNavigation.current = true;
     navigate(targetPath);
+    bypassNavigation.current = false;
   };
 
   return (
@@ -232,6 +244,7 @@ function PlayProjectWorkspace({ project }: { project: LocalProject }) {
             type="text"
             value={projectName}
             onChange={(event) => {
+              revision.current++;
               setProjectName(event.target.value);
               setHasUnsavedChanges(true);
             }}
