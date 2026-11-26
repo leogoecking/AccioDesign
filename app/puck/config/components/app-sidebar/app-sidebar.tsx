@@ -145,7 +145,7 @@ export const AppSidebar = ({
         <div
           data-testid="app-sidebar-shell"
           data-nav-mode={navigationMode}
-          className={cn("overflow-hidden rounded-2xl bg-background", {
+          className={cn("accio-application-shell overflow-hidden rounded-2xl bg-background", {
             "border shadow-sm": bordered,
           })}
         >

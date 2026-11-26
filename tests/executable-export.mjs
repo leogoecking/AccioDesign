@@ -18,9 +18,13 @@ const variants = [
   ["central-atendimento", "dark", "topnav", "comfortable", { mode: "custom", maxWidth: 1080 }],
   ["em-branco", "light", "sidebar", "default", { mode: "fluid" }],
 ];
-if (responsive) variants.push(["catalogo", "light", "sidebar", "default", { mode: "fluid" }]);
+if (responsive) variants.push(
+  ["catalogo", "light", "sidebar", "default", { mode: "fluid" }],
+  ["shell-curto", "light", "sidebar", "default", { mode: "fluid" }],
+  ["shell-legado", "light", "sidebar", "default", undefined],
+);
 
-async function catalogContent() {
+async function responsiveFixture(template) {
   await fs.mkdir(".cache", { recursive: true });
   const fixture = await fs.mkdtemp(".cache/accio-catalog-");
   const bundle = path.join(fixture, "catalog.mjs");
@@ -48,6 +52,12 @@ async function catalogContent() {
       return block;
     };
     const shell = take("AppSidebar");
+    if (template !== "catalogo") {
+      const heading = take("PageHeader");
+      heading.props.title = "Conteúdo curto";
+      shell.props.content = [heading];
+      return [shell];
+    }
     const grid = take("DashboardGrid");
     const tabs = take("TabsSection");
     const card = take("DashboardCard");
@@ -72,9 +82,10 @@ async function fetchZip(id) {
 
 const projects = [];
 for (const [template, mode, navigation, density, layoutWidth] of variants) {
+  const fixture = template === "catalogo" || template.startsWith("shell-");
   const created = await fetch(new URL("/?index", base), {
     method: "POST",
-    body: new URLSearchParams({ intent: "create", templateId: template === "catalogo" ? "em-branco" : template }),
+    body: new URLSearchParams({ intent: "create", templateId: fixture ? "em-branco" : template }),
     redirect: "manual",
   });
   const play = created.headers.get("location");
@@ -82,9 +93,12 @@ for (const [template, mode, navigation, density, layoutWidth] of variants) {
   const id = play.split("/").at(-1);
   const { zip: original } = await fetchZip(id);
   const design = JSON.parse(await original.file("design.json").async("string"));
-  if (template === "catalogo") design.content = await catalogContent();
+  if (fixture) design.content = await responsiveFixture(template);
   Object.assign(design.root.props, { navigationMode: navigation, density });
-  if (responsive) design.root.props.layoutWidth = layoutWidth;
+  if (responsive) {
+    if (layoutWidth) design.root.props.layoutWidth = layoutWidth;
+    else delete design.root.props.layoutWidth;
+  }
   design.root.props.theme.activeMode = mode;
   if (density !== "default") {
     const spacing = density === "compact" ? "0.21rem" : "0.29rem";

@@ -6,7 +6,7 @@ import path from "node:path";
 
 const directory = path.resolve(process.argv[2]);
 const projects = JSON.parse(await fs.readFile(path.join(directory, "projects.json"), "utf8"));
-assert.equal(projects.length, 5);
+assert.equal(projects.length, 7);
 const viewports = [[390, 844], [768, 1024], [1366, 768], [1920, 1080], [2560, 1440], [3440, 1440]];
 const session = `accio-responsive-${process.pid}`;
 const browser = (...args) => execFileSync("agent-browser", ["--session", session, ...args], { encoding: "utf8" }).trim();
@@ -24,8 +24,22 @@ const readLayout = framed => `(() => {
   const boxes = [...root.querySelectorAll(".accio-section, .accio-navigation-frame, [data-testid=app-sidebar-shell] main, [role=tablist]")];
   const box = page.getBoundingClientRect();
   const viewport = doc.documentElement.clientWidth;
+  const view = doc.defaultView;
+  const viewportHeight = view.innerHeight;
+  const shellBox = shell?.querySelector("[data-testid=app-sidebar-shell]");
+  const shellRect = shellBox?.getBoundingClientRect();
+  const shellStyle = shellBox && view.getComputedStyle(shellBox);
+  const main = shellBox?.querySelector("main");
   return {
     viewport, width: box.width, widthMode: root.dataset.accioWidth,
+    viewportHeight, pageHeight: box.height, rootHeight: root.getBoundingClientRect().height,
+    scrollableHeight: doc.scrollingElement.scrollHeight,
+    shellHeight: shellRect?.height, shellTop: shellRect?.top,
+    shellBottom: shellRect?.bottom, mainBottom: main?.getBoundingClientRect().bottom,
+    shellInset: shellRect ? shellRect.left - box.left : undefined,
+    shellRadius: shellStyle?.borderTopLeftRadius, shellBorder: shellStyle?.borderTopWidth,
+    shellShadow: shellStyle?.boxShadow,
+    mainPadding: main && parseFloat(view.getComputedStyle(main).paddingBlockStart),
     centered: Math.abs(box.left - (viewport - box.width) / 2) <= 2,
     documentOverflow: doc.documentElement.scrollWidth - viewport,
     pageOverflow: page.scrollWidth - page.clientWidth,
@@ -45,6 +59,22 @@ const readLayout = framed => `(() => {
     blocks: [...root.querySelectorAll("[data-puck-component]")].map(node => node.dataset.puckComponent),
     samePage: window.responsivePage === page,
   };
+})()`;
+
+const scrollToLastForm = framed => `(async () => {
+  const doc = ${documentFor(framed)};
+  const view = doc.defaultView;
+  const control = doc.querySelector(".accio-form-split button[type=submit]");
+  const before = control.getBoundingClientRect().bottom;
+  const blocked = [doc.documentElement, doc.body].some(element =>
+    ["hidden", "clip"].includes(view.getComputedStyle(element).overflowY)
+  );
+  view.scrollTo(0, doc.scrollingElement.scrollHeight);
+  await new Promise(resolve => view.requestAnimationFrame(resolve));
+  const after = control.getBoundingClientRect();
+  const result = { before, top: after.top, bottom: after.bottom, scrollTop: view.scrollY, blocked };
+  view.scrollTo(0, 0);
+  return result;
 })()`;
 
 async function checkRoute(project, name, url, measurements) {
@@ -73,17 +103,30 @@ async function checkRoute(project, name, url, measurements) {
     const result = JSON.parse(browser("eval", readLayout(framed)));
     const at = `${project.template} · ${name} · ${width}×${height}`;
     assert.ok(result, at);
-    assert.equal(result.widthMode, project.layoutWidth.mode, at);
+    assert.equal(result.widthMode, project.layoutWidth?.mode ?? "legacy", at);
     assert.equal(result.mode, project.mode, at);
     assert.equal(result.density, project.density, at);
     assert.equal(result.navigation, project.navigation, at);
-    const limit = project.layoutWidth.mode === "centered" ? 1440 : project.layoutWidth.maxWidth ?? Infinity;
+    const limit = project.layoutWidth?.mode === "centered" ? 1440 : project.layoutWidth?.maxWidth ?? Infinity;
     assert.ok(Math.abs(result.width - Math.min(result.viewport, limit)) <= 2, `${at} largura: ${JSON.stringify(result)}`);
     assert.ok(result.centered, at);
     assert.ok(result.documentOverflow <= 2 && result.pageOverflow <= 2, `${at} overflow: ${JSON.stringify(result)}`);
     assert.deepEqual(result.overflownBoxes, [], at);
     assert.ok(result.samePage, `${at} remontou o layout ao redimensionar`);
     if (result.shellWidth) {
+      if (result.widthMode === "fluid") {
+        assert.ok(result.shellHeight >= result.viewportHeight - 1, `${at} shell curto: ${JSON.stringify(result)}`);
+        assert.ok(Math.abs(result.shellHeight - result.pageHeight) <= 1, at);
+        assert.ok(Math.abs(result.shellTop) <= 1 && Math.abs(result.shellInset) <= 1, at);
+        assert.equal(result.shellRadius, "0px", at);
+        assert.equal(result.shellBorder, "0px", at);
+        assert.equal(result.shellShadow, "none", at);
+        assert.ok(result.mainPadding > 0, at);
+        assert.ok(Math.abs(result.mainBottom - result.shellBottom) <= 1, at);
+      } else {
+        assert.ok(result.shellTop > 0 && result.shellInset > 0, at);
+        assert.ok(parseFloat(result.shellRadius) > 0, at);
+      }
       assert.equal(result.topNav, project.navigation === "topnav", at);
       if (width === 390) {
         assert.equal(result.mobileNav, project.navigation !== "topnav", `${at} ${JSON.stringify(result)}`);
@@ -94,6 +137,25 @@ async function checkRoute(project, name, url, measurements) {
         assert.equal(result.rail, project.navigation === "rail", at);
         assert.ok(!result.mobileNav, at);
       }
+    }
+    if (result.widthMode === "fluid") {
+      assert.ok(result.pageHeight >= result.viewportHeight - 1, at);
+      assert.ok(Math.abs(result.rootHeight - result.pageHeight) <= 1, at);
+    }
+    if (project.template === "shell-curto") {
+      assert.ok(Math.abs(result.shellHeight - result.viewportHeight) <= 1, at);
+      assert.equal(result.scrollableHeight, result.viewportHeight, at);
+    }
+    if (project.template === "shell-legado" && height >= 1024) {
+      assert.equal(result.shellHeight, 522, at);
+      assert.ok(result.shellHeight < result.viewportHeight, at);
+    }
+    if (project.template === "sistema-administrativo" && (width === 390 || width === 1366)) {
+      assert.ok(result.shellHeight > result.viewportHeight && result.scrollableHeight > result.viewportHeight, at);
+      const scroll = JSON.parse(browser("eval", scrollToLastForm(framed)));
+      assert.ok(!scroll.blocked && scroll.before > result.viewportHeight && scroll.scrollTop > 0, `${at} ${JSON.stringify(scroll)}`);
+      assert.ok(scroll.top >= 0 && scroll.bottom <= result.viewportHeight, `${at} ${JSON.stringify(scroll)}`);
+      result.verticalScroll = scroll;
     }
     if (project.template === "catalogo" && name === "Editar") {
       assert.equal(new Set(result.blocks.filter(id => id.startsWith("catalog-"))).size, 20, at);
@@ -137,6 +199,8 @@ try {
         assert.equal(published.gridColumns, standalone.gridColumns);
         assert.equal(published.tablesScrolling, standalone.tablesScrolling);
         assert.equal(published.formWidth, standalone.formWidth);
+        assert.ok(Math.abs(published.pageHeight - standalone.pageHeight) <= 2);
+        assert.ok(Math.abs((published.shellHeight ?? 0) - (standalone.shellHeight ?? 0)) <= 2);
       }
     } finally {
       server.kill();

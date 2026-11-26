@@ -95,6 +95,43 @@
   overflow-wrap: anywhere;
 }
 
+[data-accio-width="fluid"] {
+  display: grid;
+  min-block-size: 100dvh;
+
+  & > .accio-page-content {
+    display: grid;
+
+    /* The edit canvas wraps each block for dragging. Only root shells stretch. */
+    & > :has(> .accio-navigation-frame, > [data-puck-component] > .accio-navigation-frame) {
+      display: flex;
+      flex-direction: column;
+
+      & > [data-puck-component]:has(> .accio-navigation-frame),
+      & > .accio-navigation-frame,
+      & > [data-puck-component] > .accio-navigation-frame {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        flex: 1 0 auto;
+      }
+
+      & > .accio-navigation-frame,
+      & > [data-puck-component] > .accio-navigation-frame {
+        padding: 0;
+
+        & > .accio-application-shell {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr);
+          overflow: visible;
+          border: 0;
+          border-radius: 0;
+          box-shadow: none;
+        }
+      }
+    }
+  }
+}
+
 [data-accio-width="legacy"] .accio-navigation-frame {
   max-inline-size: 1440px;
 }

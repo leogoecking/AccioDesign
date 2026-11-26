@@ -229,7 +229,7 @@ Após a correção, o campo permaneceu focado com o texto digitado durante as tr
 
 Em **Experimentar**, abra **Estrutura e estilo**. Em **Editar**, selecione a raiz da página. A configuração **Largura do conteúdo** oferece três modos.
 
-- **Fluida** ocupa a área disponível e é o padrão dos novos projetos.
+- **Fluida** é o padrão dos novos projetos. A página e o shell principal ocupam a altura disponível. O shell encosta nas bordas da área de renderização, preserva o espaçamento interno e cresce com o conteúdo para permitir a rolagem da página.
 - **Centralizada** limita o conteúdo a 1440 px e o centraliza quando sobra espaço.
 - **Personalizada** aplica um limite escolhido entre 320 e 3840 px. O conteúdo continua encolhendo quando a área disponível é menor.
 
@@ -239,11 +239,11 @@ A largura é salva em `root.props.layoutWidth` e acompanha o documento em `desig
 
 ### Verificação responsiva
 
-O teste de navegador percorre os três templates, a estrutura em branco e uma composição com os 20 blocos do catálogo, incluindo grade, abas, card e formulário aninhados. Em cada ambiente ele redimensiona a janela, verifica a largura, o overflow e a continuidade do mesmo nó de layout. As combinações cobrem Fluida, Centralizada e Personalizada, além de sidebar, rail, topo, as três densidades e os temas claro e escuro.
+O teste de navegador percorre os três templates, a estrutura em branco, uma composição com os 20 blocos do catálogo e dois documentos com shell curto, em modo Fluido e em modo legado. Em cada ambiente ele redimensiona a janela, mede largura e altura e verifica o overflow e a continuidade do mesmo nó de layout. O shell curto em modo Fluido deve acompanhar a altura da viewport sem rolagem. Com conteúdo longo, o teste rola a página até o botão do último formulário e verifica que ele fica visível. As combinações também cobrem Centralizada e Personalizada, além de sidebar, rail, topo, as três densidades e os temas claro e escuro.
 
-As 120 verificações no Chromium passaram em 390×844, 768×1024, 1366×768, 1920×1080, 2560×1440 e 3440×1440. A página ficou sem overflow horizontal, e a grade de teste passou de uma para quatro colunas entre os extremos. A tabela rolou dentro da própria região em tela estreita. A matriz usa uma combinação de largura, navegação, densidade e tema por cenário.
+As 168 verificações no Chromium passaram em 390×844, 768×1024, 1366×768, 1920×1080, 2560×1440 e 3440×1440. O shell curto preencheu a altura disponível sem rolagem, e foi possível rolar até o último formulário nos quatro ambientes. A página ficou sem overflow horizontal, a grade de teste passou de uma para quatro colunas entre os extremos e a tabela rolou dentro da própria região em tela estreita. A matriz usa uma combinação de largura, navegação, densidade e tema por cenário.
 
-Os cinco ZIPs passaram por instalação, typecheck, build e execução independente. Na comparação complementar de 15 pares de capturas de Apresentar e do frontend exportado, nove coincidiram e a maior diferença normalizada registrada pelo ImageMagick foi 0,016%. Passaram também os 12 testes automatizados do AccioDesign, o typecheck, o build e as regressões de navegação, salvamento, exportação e estabilidade de foco e estado nos slots.
+Os sete ZIPs passaram por instalação, typecheck, build e execução independente. Na comparação complementar de 21 pares de capturas de Apresentar e do frontend exportado, 15 coincidiram e a maior diferença normalizada registrada pelo ImageMagick foi 0,016%. Passaram também os 12 testes automatizados do AccioDesign, o typecheck, o build e as regressões de navegação, salvamento, exportação e estabilidade de foco e estado nos slots.
 
 Com o AccioDesign rodando na porta 5199 e um `ACCIO_DATA_DIR` temporário, execute os comandos abaixo.
 
@@ -253,4 +253,4 @@ node tests/responsive-layout.browser.mjs <diretório-impresso>
 bash tests/responsive-width-controls.browser.sh
 ```
 
-O primeiro script extrai e compila os cinco frontends em `TMPDIR` (ou no diretório temporário do sistema). O segundo usa agent-browser e grava o relatório `responsividade.json` ao lado dos pacotes. O terceiro verifica a persistência ao alternar entre Experimentar, Editar e Apresentar.
+O primeiro script extrai e compila os sete frontends em `TMPDIR` (ou no diretório temporário do sistema). O segundo usa agent-browser e grava o relatório `responsividade.json` ao lado dos pacotes. O terceiro verifica a persistência ao alternar entre Experimentar, Editar e Apresentar.
