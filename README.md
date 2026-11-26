@@ -214,3 +214,13 @@ Os três templates e a estrutura em branco foram exportados, extraídos fora do 
 Sistema administrativo e Em branco coincidiram na comparação de imagens. Dashboard e Central tiveram pequenas diferenças na métrica normalizada do ImageMagick (até 0,018%) nas condições testadas. A comparação também verificou texto renderizado, modo, navegação, densidade, família tipográfica, fundo, cor do texto, espaçamento e raio. O filtro da tabela demonstrativa foi exercitado no frontend extraído.
 
 Para reproduzir, inicie o AccioDesign com um `ACCIO_DATA_DIR` temporário na porta 5199. Execute `node tests/executable-export.mjs` e passe o diretório impresso a `node tests/executable-export.browser.mjs <diretório>`. O primeiro script usa npm e unzip. O segundo usa agent-browser e ImageMagick e grava os PNGs e o relatório em `capturas/` no diretório temporário.
+
+### Estabilidade dos slots do frontend
+
+Ao atualizar os dados do documento, o runtime criava uma nova função de componente para cada slot. O React interpretava essas funções como tipos diferentes e remontava a subárvore. No Chromium, uma atualização externa fez a aba “Detalhes” voltar para “Resumo” e removeu do DOM o campo que estava focado.
+
+Cada bloco agora mantém um tipo React por endereço de slot. O endereço usa IDs nos itens de array quando disponíveis e usa a posição como alternativa. O componente do slot lê o conteúdo atual por contexto. As chaves por ID continuam preservando os blocos que permanecem no mesmo slot. Os tipos dos slots removidos são descartados com a atualização do bloco.
+
+Com o AccioDesign rodando com um `ACCIO_DATA_DIR` temporário na porta 5199, execute `node tests/stable-export-runtime.browser.mjs`. O script baixa e extrai um frontend, executa instalação, typecheck e build fora do repositório e usa Chromium para atualizar um formulário aninhado em abas. O teste verifica foco, conteúdo digitado, os mesmos nós de DOM e a aba selecionada. Também verifica a chegada dos dados novos, a reordenação e a inclusão e remoção de blocos e slots.
+
+Após a correção, o campo permaneceu focado com o texto digitado durante as três atualizações. A aba recém-incluída exibiu o conteúdo esperado. Os três templates e a estrutura em branco foram recompilados e seus 12 PNGs coincidiram byte a byte com as capturas dos frontends da Fase 5 na mesma matriz de tamanhos.
