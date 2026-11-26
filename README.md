@@ -269,6 +269,12 @@ Extraia o ZIP inteiro, incluindo a pasta oculta `.agents`. Abra no agente a past
 
 Um pedido inicial pode ser “Use a skill acciodesign para implementar o fluxo descrito. Reutilize o frontend exportado e preserve o design aprovado.” As regras de negócio vêm dos requisitos informados e do código de destino. O contrato registra a aparência aprovada e os dados demonstrativos orientam a leitura da interface.
 
+### Engineering Quality Gate (Fase 6.1)
+
+A skill usa o inventário do fluxo para comparar campos, indicadores, ações e componentes com a interface renderizada ao conectar dados reais. O [Quality Gate](./skills/acciodesign/references/validation.md#quality-gate) reúne as evidências de implementação, reutilização, separação de responsabilidades, testes de invariantes, persistência, fidelidade visual, responsividade e estabilidade do runtime, typecheck e build.
+
+Cada verificação recebe um status **aprovada**, **reprovada**, **não aplicável** ou **não verificada**, acompanhado da evidência ou do motivo. Novas regras de negócio exigem testes automatizados mesmo em projetos sem suíte existente. As referências detalhadas ficam fora do `SKILL.md` principal e são consultadas conforme o fluxo.
+
 ### Instalação global opcional
 
 Para disponibilizar a skill a todos os seus projetos, copie manualmente a pasta completa `skills/acciodesign/` da fonte ou `.agents/skills/acciodesign/` do ZIP para um dos destinos abaixo. Se já houver uma skill com esse nome, compare as versões antes de substituir.
@@ -282,6 +288,6 @@ A instalação é opcional. A exportação cria somente o ZIP e a descoberta no 
 
 ### Verificação da skill
 
-`npm test` verifica o YAML das duas entradas, a resolução dos links, a inclusão byte a byte dos cinco arquivos canônicos e a preservação do contrato e do frontend. O teste de determinismo compara dois ZIPs completos do mesmo projeto.
+`npm test` verifica o YAML das duas entradas, a resolução das referências e do link para o Quality Gate, seus oito critérios e quatro status, a inclusão byte a byte dos cinco arquivos canônicos e a preservação do contrato e do frontend. O teste de determinismo compara dois ZIPs completos do mesmo projeto.
 
 A descoberta foi confirmada numa exportação extraída em um diretório isolado. O Codex CLI 0.172.0 listou a skill habilitada com o escopo de repositório em `skills/list`. O Antigravity CLI 1.5.18 anunciou `acciodesign` na lista de comandos da sessão ACP. Esses testes conferiram a descoberta local, sem enviar prompts a modelos. O suporte a App e IDE segue os caminhos da documentação oficial.
