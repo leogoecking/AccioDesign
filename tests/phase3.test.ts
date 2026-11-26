@@ -574,13 +574,13 @@ describe("Largura responsiva do projeto", () => {
       assert.deepEqual(saved.data.root?.props?.layoutWidth, width);
       assert.deepEqual(JSON.parse(files["frontend/src/design.json"]).root.props.layoutWidth, width);
       assert.match(files["DESIGN.md"], /"maxWidthPx": 1120/);
-      assert.match(files["SKILL.md"], /largura do conteúdo/);
+      assert.match(files[".agents/skills/acciodesign/references/visual-contract.md"], /largura do conteúdo/);
     });
   });
 });
 
 describe("Fase 6 — Agent Skill", () => {
-  it("empacota a fonte canônica e mantém a entrada legada com referências resolvíveis", async () => {
+  it("empacota a fonte canônica e o Quality Gate com referências resolvíveis nas duas entradas", async () => {
     const { buildDesignZip } = await import("../app/export/design-export.server");
     const JSZip = (await import("jszip")).default;
     const { parse } = await import("yaml");
@@ -613,6 +613,23 @@ describe("Fase 6 — Agent Skill", () => {
         assert.equal(await read(`${directory}/${source}`), await fs.readFile(path.join("skills/acciodesign", source), "utf8"));
       }
 
+      const [, gate] = (await read(`${directory}/references/validation.md`)).split(/^## Quality Gate$/m);
+      assert.ok(gate, "seção Quality Gate ausente");
+      const checks = gate.split(/\r?\n/)
+        .filter(line => line.startsWith("| "))
+        .slice(2)
+        .map(line => {
+          const [, check, evidence] = line.split("|");
+          assert.ok(evidence?.trim(), `critério sem evidência esperada: ${check}`);
+          return check.trim();
+        });
+      assert.deepEqual(checks.sort(), [
+        "Alterações visuais", "Funcionalidades solicitadas", "Persistência e integridade", "Regras de negócio",
+        "Responsividade e runtime", "Reutilização de componentes", "Separação de responsabilidades", "Typecheck e build",
+      ].sort());
+      const classifications = [...gate.matchAll(/^- \*\*(.+?)\*\* /gm)].map(([, label]) => label);
+      assert.deepEqual(classifications.sort(), ["Aprovada", "Reprovada", "Não aplicável", "Não verificada"].sort());
+
       const entrypoints = [
         ["SKILL.md", "acciodesign-design"],
         [`${directory}/SKILL.md`, "acciodesign"],
@@ -631,8 +648,10 @@ describe("Fase 6 — Agent Skill", () => {
         assert.ok(metadata.description.trim() && metadata.description.length <= 1024);
         const links = [...parts[2].matchAll(/\]\(([^)]+)\)/g)]
           .map(([, target]) => path.posix.join(path.posix.dirname(entrypoint), target));
-        assert.deepEqual(links.sort(), references.map(reference => `${directory}/${reference}`).sort());
-        for (const link of links) assert.ok(zip.file(link), `referência ausente: ${link}`);
+        const expected = references.map(reference => `${directory}/${reference}` +
+          (reference === "references/validation.md" ? "#quality-gate" : ""));
+        assert.deepEqual(links.sort(), expected.sort());
+        for (const link of links) assert.ok(zip.file(link.split("#")[0]), `referência ausente: ${link}`);
         instructions.push(parts[2].replaceAll(`${directory}/references/`, "references/"));
       }
       assert.equal(instructions[0], instructions[1]);

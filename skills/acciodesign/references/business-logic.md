@@ -1,14 +1,16 @@
-# Implementar regras de negócio
+# Implementar e testar regras de negócio
 
-## Requisitos e fronteiras
+## Definir invariantes antes de implementar
 
-- Derive as regras do pedido e dos contratos já aprovados no destino. Dados fictícios, rótulos, filtros, métricas, status e formulários do design servem como referência de apresentação. Se faltar uma regra que muda o resultado, confirme-a ou registre a lacuna. Implemente somente o fluxo solicitado.
-- Preserve a separação entre views, regras e acesso a dados na medida que a tarefa exigir. Uma função de validação e um pequeno adaptador de armazenamento podem bastar em um projeto simples. Reutilize os limites e convenções do projeto existente.
-- Valide entradas novas e dados carregados na fronteira do domínio. Considere normalização, duplicidade, referências inválidas, campos ausentes, estados vazios e falhas de gravação conforme as regras confirmadas. Para integrações com servidor, aplique as invariantes também no lado que controla a persistência.
+Para cada operação do fluxo, anote a regra aplicável, sua origem e o resultado esperado quando ela é satisfeita ou violada. Use o pedido e os contratos já aprovados no destino. Rótulos, campos, métricas e dados da demonstração ajudam a localizar a área da tela. As regras devem vir de requisitos confirmados. Registre uma premissa quando puder avançar com ela e peça esclarecimento quando a regra ausente for indispensável.
 
-## Aprendizados do AccioDesign-Lab
+Considere apenas as verificações que se aplicam ao fluxo.
 
-- Uma máscara ou o comprimento de um identificador verificam somente a sua forma. Se o domínio exigir um identificador válido ou único, teste a regra aplicável e a duplicidade após normalização, inclusive em edição.
-- Quando houver dinheiro, use unidades menores inteiras dentro de um intervalo seguro ou decimal exato. Defina moeda e regras de arredondamento do domínio. Formate para exibição depois do cálculo.
-- Diferencie armazenamento sem registros de falha de leitura ou corrupção. Preserve os dados anteriores e informe a falha. Grave alterações somente quando os dados forem válidos e mantenha uma forma de recuperar ou corrigir registros problemáticos.
-- Teste as invariantes implementadas, os limites, duplicidades e erros de leitura ou gravação pertinentes. Verifique que uma gravação bem-sucedida aparece depois de reabrir o fluxo e que uma gravação rejeitada mantém os dados válidos.
+- **Entradas e registros.** Defina normalização, validação, unicidade, referências e transições permitidas. Se houver unicidade, verifique duplicidade após normalizar, inclusive em edição. Uma máscara ou o comprimento de um identificador verificam sua forma. Para integrações com servidor, aplique as invariantes onde a gravação é controlada.
+- **Dinheiro.** Defina moeda e arredondamento. Calcule com unidades menores inteiras dentro de um intervalo seguro ou decimal exato e formate o resultado para exibição.
+- **Persistência.** Diferencie ausência de registros, falhas de leitura e dados corrompidos. Preserve dados anteriores diante de corrupção ou falha de gravação. Só confirme a operação depois de persistir com sucesso. Represente estados vazios e de erro conforme o resultado da operação.
+- **Indicadores.** Defina fonte, cálculo e recorte. Verifique se os indicadores e as listas refletem os registros após uma alteração e se filtros diferentes têm recortes intencionais. Sem dados confiáveis, indique indisponibilidade. Use zero quando o cálculo com dados válidos resultar em zero e valores fictícios somente em estados identificados como demonstração.
+
+## Testes obrigatórios
+
+Ao implementar uma nova regra de negócio, crie testes automatizados para as invariantes relevantes. Use as ferramentas existentes ou adote a alternativa mínima compatível se o destino ainda não tiver suíte. Cubra entradas válidas, inválidas, limites e falhas pertinentes. Para persistência, confira que uma gravação bem-sucedida aparece numa nova leitura e que uma operação rejeitada mantém os dados válidos. Typecheck e build são verificações distintas desses testes.
