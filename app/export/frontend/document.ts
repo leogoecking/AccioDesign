@@ -17,23 +17,43 @@ export function readBlocks(value: unknown): DocumentBlock[] {
   });
 }
 
+type SlotPath = ReadonlyArray<string | number | { id: string }>;
+
 // Walk only declared slots. Ordinary arrays can contain records with type/props too.
 export function mapSlots(
   props: Record<string, unknown>,
   fields: SlotFields,
-  visit: (blocks: DocumentBlock[]) => unknown,
-  owned = true
+  visit: (blocks: DocumentBlock[], address: string) => unknown
 ): Record<string, unknown> {
-  const result = { ...props };
-  for (const [name, field] of Object.entries(fields)) {
-    const value = Object.hasOwn(props, name) ? props[name] : undefined;
-    if (field === "slot") {
-      if (owned || Object.hasOwn(props, name)) result[name] = visit(readBlocks(value ?? []));
-    } else if (field.kind === "array" && Array.isArray(value)) {
-      result[name] = value.map(item => isObject(item) ? mapSlots(item, field.fields, visit, false) : item);
-    } else if (field.kind === "object" && isObject(value)) {
-      result[name] = mapSlots(value, field.fields, visit, false);
+  function walk(
+    props: Record<string, unknown>,
+    fields: SlotFields,
+    path: SlotPath,
+    owned: boolean
+  ): Record<string, unknown> {
+    const result = { ...props };
+    for (const [name, field] of Object.entries(fields)) {
+      const present = Object.hasOwn(props, name);
+      const value = present ? props[name] : undefined;
+      const fieldPath = [...path, name];
+      if (field === "slot") {
+        if (owned || present) result[name] = visit(readBlocks(value ?? []), JSON.stringify(fieldPath));
+      } else if (field.kind === "array" && Array.isArray(value)) {
+        const ids = new Set<string>();
+        result[name] = value.map((item, index) => {
+          if (!isObject(item)) return item;
+          const id = item.id;
+          if (typeof id === "string" && id && !ids.has(id)) {
+            ids.add(id);
+            return walk(item, field.fields, [...fieldPath, { id }], false);
+          }
+          return walk(item, field.fields, [...fieldPath, index], false);
+        });
+      } else if (field.kind === "object" && isObject(value)) {
+        result[name] = walk(value, field.fields, fieldPath, false);
+      }
     }
+    return result;
   }
-  return result;
+  return walk(props, fields, [], true);
 }
