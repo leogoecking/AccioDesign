@@ -1,3 +1,5 @@
+import { LayoutWidthField } from "~/components/layout-width-field";
+import type { LayoutWidth } from "~/puck/context/visual-layout-context";
 import { useMemo, useState } from "react";
 import {
   Check,
@@ -48,6 +50,8 @@ export function PlaygroundControls({
   theme,
   navigationMode,
   density,
+  layoutWidth,
+  onChangeLayoutWidth,
   supportsNavigationModes,
   onSelectPreset,
   onChangeMode,
@@ -60,6 +64,8 @@ export function PlaygroundControls({
   theme: AccioThemeDocument;
   navigationMode: NavigationMode;
   density: VisualDensity;
+  layoutWidth: LayoutWidth | undefined;
+  onChangeLayoutWidth: (width: LayoutWidth) => void;
   supportsNavigationModes: boolean;
   onSelectPreset: (presetId: string) => void;
   onChangeMode: (mode: ThemeMode) => void;
@@ -266,6 +272,8 @@ export function PlaygroundControls({
               </div>
             </div>
           ) : null}
+
+          <LayoutWidthField value={layoutWidth} onChange={onChangeLayoutWidth} />
 
           {/* Tipografia */}
           <div className="space-y-2">

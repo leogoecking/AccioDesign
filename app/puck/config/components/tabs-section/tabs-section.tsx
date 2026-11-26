@@ -34,8 +34,8 @@ export const TabsSection = ({
 
   return (
     <CompoundContainer padding={padding}>
-      <Tabs defaultValue={firstTabValue} className="w-full">
-        <TabsList variant={variant}>
+      <Tabs defaultValue={firstTabValue} className="w-full min-w-0">
+        <TabsList variant={variant} className="h-auto max-w-full flex-wrap">
           {tabs.map((tab, index) => {
             const tabValue = tab.id || `tab-${index}`;
             return (
@@ -43,6 +43,7 @@ export const TabsSection = ({
                 key={tabValue}
                 value={tabValue}
                 ref={overlayRef}
+                className="min-w-0 max-w-full whitespace-normal"
               >
                 <span>{tab.label}</span>
                 {tab.badge ? (

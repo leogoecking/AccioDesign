@@ -17,6 +17,12 @@ export interface CompoundButtonProps {
   className?: string;
 }
 
+const textButtonMinHeight: Partial<Record<NonNullable<ButtonSize>, string>> = {
+  xs: "min-h-6",
+  sm: "min-h-7",
+  lg: "min-h-9",
+};
+
 export const CompoundButton = (props: CompoundButtonProps) => {
   const isEditorMode = useIsEditorMode();
   const isIconSize =
@@ -25,6 +31,11 @@ export const CompoundButton = (props: CompoundButtonProps) => {
     props.size === "icon-sm" ||
     props.size === "icon-lg";
 
+  const wrapping = !isIconSize && cn(
+    "h-auto max-w-full whitespace-normal",
+    props.size === "xs" ? "py-0.5" : "py-1",
+    textButtonMinHeight[props.size ?? "default"] ?? "min-h-8",
+  );
   const content = (
     <>
       {!isIconSize && props.label}
@@ -46,6 +57,7 @@ export const CompoundButton = (props: CompoundButtonProps) => {
         className={cn(
           buttonVariants({ variant: props.variant, size: props.size }),
           "gap-2",
+          wrapping,
           props.className
         )}
       >
@@ -58,7 +70,7 @@ export const CompoundButton = (props: CompoundButtonProps) => {
     <Button
       variant={props.variant}
       size={props.size}
-      className={cn("gap-2", props.className)}
+      className={cn("gap-2", wrapping, props.className)}
       type={props.type ?? "button"}
     >
       {content}

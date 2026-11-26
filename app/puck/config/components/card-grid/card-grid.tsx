@@ -30,9 +30,9 @@ export const CardGrid = ({
   cards = [],
 }: CardGridProps) => {
   const gridColsClass = {
-    "2": "sm:grid-cols-2",
-    "3": "sm:grid-cols-2 lg:grid-cols-3",
-    "4": "sm:grid-cols-2 lg:grid-cols-4",
+    "2": "@min-[640px]/section:grid-cols-2",
+    "3": "@min-[640px]/section:grid-cols-2 @min-[1024px]/section:grid-cols-3",
+    "4": "@min-[640px]/section:grid-cols-2 @min-[1024px]/section:grid-cols-4",
   }[columns];
 
   return (

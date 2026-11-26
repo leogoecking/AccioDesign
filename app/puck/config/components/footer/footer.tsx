@@ -31,19 +31,19 @@ export const Footer = (props: FooterProps) => {
       padding={props.padding}
       className="bg-foreground text-background"
     >
-      <div className="grid items-start gap-10 lg:grid-cols-2">
+      <div className="grid items-start gap-10 @min-[1024px]/section:grid-cols-2">
         <div className="flex flex-col items-start gap-6">
           <div className="flex flex-col gap-2">
-            <h2 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
+            <h2 className="font-heading text-2xl font-semibold tracking-tight @min-[768px]/section:text-3xl">
               {props.companyName}
             </h2>
             {props.tagLine ? (
-              <p className="max-w-lg text-sm leading-relaxed text-background/75 md:text-base">
+              <p className="max-w-lg text-sm leading-relaxed text-background/75 @min-[768px]/section:text-base">
                 {props.tagLine}
               </p>
             ) : null}
           </div>
-          <div className="flex flex-wrap gap-12 text-xs leading-relaxed text-background/75 md:text-sm">
+          <div className="flex flex-wrap gap-12 text-xs leading-relaxed text-background/75 @min-[768px]/section:text-sm">
             {props.address ? (
               <p style={{ whiteSpace: "pre-line" }}>{props.address}</p>
             ) : null}
@@ -61,7 +61,7 @@ export const Footer = (props: FooterProps) => {
             </div>
           </div>
         </div>
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 @min-[640px]/section:grid-cols-2 @min-[1024px]/section:grid-cols-3">
           {props.navigation?.map((item, index) => (
             <div key={index} className="flex flex-col items-start gap-2">
               {item.url ? (

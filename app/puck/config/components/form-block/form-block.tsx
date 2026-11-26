@@ -42,7 +42,7 @@ export const FormBlock = ({
           />
         </div>
       ) : (
-        <div className="grid items-start gap-10 lg:grid-cols-2">
+        <div className="accio-form-split grid items-start gap-10 @min-[1024px]/section:grid-cols-2">
           <CompoundContent
             badge={badge}
             heading={heading}
@@ -52,7 +52,7 @@ export const FormBlock = ({
             alignContent="start"
             spacing="normal"
           />
-          <div className="flex items-center justify-center lg:justify-end">
+          <div className="flex items-center justify-center @min-[1024px]/section:justify-end">
             <CompoundForm
               title={form.title}
               description={form.description}

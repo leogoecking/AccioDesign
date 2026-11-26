@@ -36,7 +36,7 @@ export const Bento = ({
           alignContent="start"
           spacing="tight"
         />
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:grid-rows-2">
+        <div className="grid grid-cols-1 gap-6 @min-[640px]/section:grid-cols-2 @min-[1024px]/section:grid-cols-3 @min-[1024px]/section:grid-rows-2">
           {cards.map((card, index) => (
             <CompoundCard
               key={index}
@@ -45,10 +45,10 @@ export const Bento = ({
               description={card.description}
               button={card.button}
               className={cn({
-                "lg:[grid-area:1/1/2/3]": index === 0,
-                "lg:[grid-area:1/3/2/4]": index === 1,
-                "lg:[grid-area:2/1/3/2]": index === 2,
-                "lg:[grid-area:2/2/3/4]": index === 3,
+                "@min-[1024px]/section:[grid-area:1/1/2/3]": index === 0,
+                "@min-[1024px]/section:[grid-area:1/3/2/4]": index === 1,
+                "@min-[1024px]/section:[grid-area:2/1/3/2]": index === 2,
+                "@min-[1024px]/section:[grid-area:2/2/3/4]": index === 3,
               })}
             />
           ))}

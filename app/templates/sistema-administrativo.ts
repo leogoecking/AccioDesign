@@ -111,13 +111,6 @@ export const sistemaAdministrativoTemplate: TemplateDefinition = {
                   url: "",
                   variant: "secondary",
                 },
-                action: {
-                  label: "Exportar base",
-                  url: "#exportar",
-                  variant: "outline",
-                  size: "sm",
-                  icon: "download",
-                },
                 padding: { top: "none", bottom: "small" },
               },
             },
@@ -134,13 +127,6 @@ export const sistemaAdministrativoTemplate: TemplateDefinition = {
                   variant: "secondary",
                 },
                 actions: [
-                  {
-                    label: "Importar planilha",
-                    url: "#importar",
-                    variant: "outline",
-                    size: "default",
-                    icon: "download",
-                  },
                   {
                     label: "Novo cliente",
                     url: "#cadastro-cliente",

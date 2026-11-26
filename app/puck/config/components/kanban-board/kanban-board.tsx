@@ -72,7 +72,7 @@ export const KanbanBoard = ({
             </div>
           ) : null}
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 @min-[768px]/section:grid-cols-2 @min-[1280px]/section:grid-cols-4">
             {columns.map((column, colIndex) => {
               const cards = column.cards || [];
               return (
