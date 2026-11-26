@@ -56,15 +56,15 @@ export const Header = ({
 
   return (
     <ErrorBoundary>
-      <header className="sticky top-0 left-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
-        <div className="container relative mx-auto flex min-h-16 flex-row items-center justify-between gap-4 lg:grid lg:grid-cols-3">
-          <div className="hidden flex-row items-center justify-start gap-2 lg:flex">
+      <header className="@container/header sticky top-0 left-0 z-40 w-full min-w-0 border-b bg-background/95 backdrop-blur-sm">
+        <div className="accio-section container relative mx-auto flex min-h-16 flex-row items-center justify-between gap-4 @min-[1024px]/header:grid @min-[1024px]/header:grid-cols-3">
+          <div className="hidden min-w-0 flex-row items-center justify-start gap-2 @min-[1024px]/header:flex">
             {Array.isArray(primaryNavigation) &&
             primaryNavigation.length > 0 ? (
-              <NavigationMenu className="flex items-start justify-start">
-                <NavigationMenuList className="flex flex-row justify-start gap-1">
+              <NavigationMenu className="flex min-w-0 items-start justify-start">
+                <NavigationMenuList className="flex min-w-0 flex-row flex-wrap justify-start gap-1">
                   {primaryNavigation.map((item, index) => (
-                    <NavigationMenuItem key={index}>
+                    <NavigationMenuItem key={index} className="min-w-0 max-w-full">
                       {item.url ? (
                         <NavigationMenuLink asChild>
                           <CompoundButton
@@ -76,7 +76,7 @@ export const Header = ({
                       ) : (
                         <>
                           <NavigationMenuTrigger
-                            className="text-sm font-medium"
+                            className="h-auto min-h-9 max-w-full whitespace-normal text-sm font-medium"
                             ref={overlayRef}
                           >
                             {item.label}
@@ -132,12 +132,12 @@ export const Header = ({
               </NavigationMenu>
             ) : null}
           </div>
-          <div className="flex lg:justify-center">
-            <p className="font-heading text-base font-semibold tracking-tight whitespace-nowrap">
+          <div className="flex min-w-0 @min-[1024px]/header:justify-center">
+            <p className="font-heading text-base font-semibold tracking-tight">
               {companyName}
             </p>
           </div>
-          <div className="flex w-full items-center justify-end gap-2">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2">
             {secondaryNavigation?.map((item, index) => (
               <Fragment key={index}>
                 <CompoundButton
@@ -146,16 +146,16 @@ export const Header = ({
                   icon={item.icon}
                   url={item.url}
                   className={cn({
-                    "hidden md:inline-flex": item.isHiddenOnMobile,
+                    "hidden @min-[768px]/header:inline-flex": item.isHiddenOnMobile,
                   })}
                 />
                 {item.divider ? (
-                  <div className="hidden h-5 border-e md:inline" />
+                  <div className="hidden h-5 border-e @min-[768px]/header:inline" />
                 ) : null}
               </Fragment>
             ))}
           </div>
-          <div className="flex w-10 shrink items-center justify-end lg:hidden">
+          <div className="flex shrink-0 items-center justify-end @min-[1024px]/header:hidden">
             <Button
               variant="ghost"
               size="icon-sm"
@@ -170,7 +170,7 @@ export const Header = ({
               )}
             </Button>
             {isOpen && (
-              <div className="container absolute top-16 right-0 flex w-full flex-col gap-6 border-t bg-background py-4 shadow-lg">
+              <div className="accio-section container absolute top-full right-0 flex w-full flex-col gap-6 border-t bg-background py-4 shadow-lg">
                 {primaryNavigation?.map((item, index) => (
                   <div key={index} className="flex flex-col gap-2">
                     {item.url ? (

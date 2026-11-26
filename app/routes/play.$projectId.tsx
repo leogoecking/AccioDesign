@@ -427,6 +427,8 @@ function PlayProjectWorkspace({ project }: { project: LocalProject }) {
               theme={themeDoc}
               navigationMode={navigationMode}
               density={density}
+              layoutWidth={rootProps.layoutWidth}
+              onChangeLayoutWidth={layoutWidth => updateRootProps(() => ({ layoutWidth }))}
               supportsNavigationModes={supportsNav}
               onSelectPreset={handleSelectPreset}
               onChangeMode={handleChangeMode}

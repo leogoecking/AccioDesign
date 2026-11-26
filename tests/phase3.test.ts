@@ -534,3 +534,44 @@ describe("Fase 5 — frontend React exportado", () => {
     assert.throws(() => buildDesignFiles(unsupported), /Componente sem suporte/);
   });
 });
+
+describe("Largura responsiva do projeto", () => {
+  it("persiste os modos de largura e mantém documentos antigos sem migração de layout", async () => {
+    const { getContentMaxWidth, normalizeLayoutWidth } = await import("../app/puck/context/visual-layout-context");
+    const { buildDesignFiles } = await import("../app/export/design-export.server");
+    assert.equal(normalizeLayoutWidth(undefined), undefined);
+    assert.equal(normalizeLayoutWidth({ mode: "invalid" }), undefined);
+    assert.deepEqual(normalizeLayoutWidth({ mode: "custom", maxWidth: 5000 }), { mode: "custom", maxWidth: 3840 });
+    assert.deepEqual(normalizeLayoutWidth({ mode: "custom", maxWidth: 0 }), { mode: "custom", maxWidth: 320 });
+    assert.equal(getContentMaxWidth(normalizeLayoutWidth({ mode: "centered" })), 1440);
+    for (const template of ALL_TEMPLATES_META) {
+      assert.deepEqual(instantiateTemplate(template.id).root?.props?.layoutWidth, { mode: "fluid" });
+    }
+    const text = JSON.stringify(instantiateTemplate("sistema-administrativo"));
+    assert.doesNotMatch(text, /Exportar base|Importar planilha/);
+
+    await withTempStore(async options => {
+      const project = await createProjectFromTemplate("em-branco", "Largura", options);
+      const legacy = structuredClone(project.data);
+      delete legacy.root!.props!.layoutWidth;
+      await saveProject(project.id, { data: legacy }, options);
+      const loadedLegacy = await getProject(project.id, options);
+      assert.ok(loadedLegacy);
+      assert.equal(Object.hasOwn(loadedLegacy.data.root!.props!, "layoutWidth"), false);
+      const legacyFiles = buildDesignFiles(loadedLegacy);
+      assert.match(legacyFiles["DESIGN.md"], /"modo": "legacy"/);
+      assert.equal(JSON.parse(legacyFiles["design.json"]).root.props.layoutWidth, undefined);
+
+      const width = { mode: "custom", maxWidth: 1120 } as const;
+      legacy.root!.props!.layoutWidth = width;
+      await saveProject(project.id, { data: legacy }, options);
+      const saved = await getProject(project.id, options);
+      assert.ok(saved);
+      const files = buildDesignFiles(saved);
+      assert.deepEqual(saved.data.root?.props?.layoutWidth, width);
+      assert.deepEqual(JSON.parse(files["frontend/src/design.json"]).root.props.layoutWidth, width);
+      assert.match(files["DESIGN.md"], /"maxWidthPx": 1120/);
+      assert.match(files["SKILL.md"], /largura do conteúdo/);
+    });
+  });
+});

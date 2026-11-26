@@ -32,10 +32,10 @@ export const PageHeader = ({
   return (
     <CompoundContainer padding={padding}>
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col justify-between gap-4 @min-[640px]/section:flex-row @min-[640px]/section:items-center">
+          <div className="flex min-w-0 flex-col gap-1.5">
             <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
+              <h1 className="font-heading text-2xl font-semibold tracking-tight @min-[768px]/section:text-3xl">
                 {title}
               </h1>
               {badge?.label ? (
@@ -47,7 +47,7 @@ export const PageHeader = ({
               ) : null}
             </div>
             {subtitle ? (
-              <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
+              <p className="max-w-2xl text-sm text-muted-foreground @min-[768px]/section:text-base">
                 {subtitle}
               </p>
             ) : null}

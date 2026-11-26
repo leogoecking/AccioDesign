@@ -82,15 +82,15 @@ export const DataTable = ({
   return (
     <CompoundContainer padding={padding}>
       <Card>
-        <CardHeader className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <div className="flex flex-col gap-1">
+        <CardHeader className="flex flex-col justify-between gap-4 @min-[640px]/section:flex-row @min-[640px]/section:items-center">
+          <div className="flex min-w-0 flex-col gap-1">
             <CardTitle>{title}</CardTitle>
             {description ? (
               <CardDescription>{description}</CardDescription>
             ) : null}
           </div>
           {showSearch ? (
-            <div className="relative w-full sm:w-64">
+            <div className="relative w-full max-w-full @min-[640px]/section:w-64">
               <Search
                 className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
                 aria-hidden="true"

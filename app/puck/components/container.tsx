@@ -26,7 +26,7 @@ export const CompoundContainer = ({
     <ErrorBoundary>
       <div
         className={cn(
-          "w-full",
+          "w-full min-w-0",
           {
             "pt-4 lg:pt-6": top === "small",
             "pb-4 lg:pb-6": bottom === "small",
@@ -38,7 +38,10 @@ export const CompoundContainer = ({
           className
         )}
       >
-        <div className={fullWidth ? "w-full px-4 lg:px-6" : "container mx-auto"}>
+        <div className={cn(
+          "@container/section w-full min-w-0",
+          fullWidth ? "px-4 lg:px-6" : "accio-section container mx-auto"
+        )}>
           {children}
         </div>
       </div>

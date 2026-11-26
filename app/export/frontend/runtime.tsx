@@ -70,6 +70,7 @@ export function DesignView({ data, registry, theme }: {
       density={normalizeVisualDensity(root?.density)}
       mode={theme.activeMode}
       presetId={theme.presetId}
+      layoutWidth={root?.layoutWidth}
     >
       <div><Blocks blocks={readBlocks(data.content)} registry={registry} /></div>
     </RootLayout>

@@ -34,7 +34,7 @@ export const Stats = ({
   return (
     <CompoundContainer padding={padding}>
       {layout === "inline" ? (
-        <div className="grid grid-cols-1 gap-4 text-start sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 text-start @min-[640px]/section:grid-cols-2 @min-[1280px]/section:grid-cols-4">
           {statistics.map((stat, index) => (
             <Stat
               key={index}
@@ -48,7 +48,7 @@ export const Stats = ({
         </div>
       ) : null}
       {layout === "section" ? (
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-8 @min-[1024px]/section:grid-cols-2">
           <CompoundContent
             badge={badge}
             heading={heading}
@@ -56,7 +56,7 @@ export const Stats = ({
             buttons={buttons}
           />
           <div className="flex items-center justify-center">
-            <div className="grid w-full grid-cols-1 gap-4 text-start sm:grid-cols-2">
+            <div className="grid w-full grid-cols-1 gap-4 text-start @min-[640px]/section:grid-cols-2">
               {statistics.map((stat, index) => (
                 <Stat
                   key={index}
@@ -98,7 +98,7 @@ const Stat = ({
           <MoveDownLeft className={directionClassName} />
         ) : null}
         <div className="flex flex-row flex-wrap items-baseline gap-x-2 gap-y-0.5 text-start">
-          <span className="font-heading text-2xl font-semibold tracking-tight whitespace-nowrap tabular-nums">
+          <span className="min-w-0 font-heading text-2xl font-semibold tracking-tight tabular-nums">
             {value}
           </span>
           {typeof percentage === "number" && percentage > 0 ? (

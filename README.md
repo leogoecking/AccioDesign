@@ -201,7 +201,7 @@ npm run dev
 
 `npm run build` gera `dist/` para hospedagem estática. O frontend não depende do servidor do AccioDesign, do Puck ou de clones upstream. O npm instala as dependências declaradas e suas transitivas. O diretório contém seu próprio README, licenças e atribuições.
 
-O exportador parte dos slots declarados na configuração Puck e inclui apenas os blocos usados no documento salvo, inclusive os aninhados. Os 20 componentes do [catálogo](./app/puck/index.tsx) têm suporte. As views são os mesmos arquivos usados pela apresentação. O layout compartilhado aplica a densidade e a variante de navegação. O CSS é idêntico ao `theme.css` do contrato e carrega os dois modos com o modo salvo ativo. Um catálogo de fontes de código empacotado com o servidor restringe os arquivos que podem entrar no ZIP.
+O exportador parte dos slots declarados na configuração Puck e inclui apenas os blocos usados no documento salvo, inclusive os aninhados. Os 20 componentes do [catálogo](./app/puck/index.tsx) têm suporte. As views são os mesmos arquivos usados pela apresentação. O layout compartilhado aplica a densidade, a variante de navegação e a largura do conteúdo. O CSS é idêntico ao `theme.css` do contrato e carrega os dois modos com o modo salvo ativo. Um catálogo de fontes de código empacotado com o servidor restringe os arquivos que podem entrar no ZIP.
 
 Para conectar dados reais, comece em `frontend/src/main.tsx` e substitua gradualmente os dados demonstrativos de `frontend/src/design.json`. Mantenha as props visuais, a ordem dos slots e os tokens. Formulários, links e filtros preservam o comportamento da apresentação. Integrações com APIs e regras de negócio são responsabilidade do projeto de destino.
 
@@ -224,3 +224,33 @@ Cada bloco agora mantém um tipo React por endereço de slot. O endereço usa ID
 Com o AccioDesign rodando com um `ACCIO_DATA_DIR` temporário na porta 5199, execute `node tests/stable-export-runtime.browser.mjs`. O script baixa e extrai um frontend, executa instalação, typecheck e build fora do repositório e usa Chromium para atualizar um formulário aninhado em abas. O teste verifica foco, conteúdo digitado, os mesmos nós de DOM e a aba selecionada. Também verifica a chegada dos dados novos, a reordenação e a inclusão e remoção de blocos e slots.
 
 Após a correção, o campo permaneceu focado com o texto digitado durante as três atualizações. A aba recém-incluída exibiu o conteúdo esperado. Os três templates e a estrutura em branco foram recompilados e seus 12 PNGs coincidiram byte a byte com as capturas dos frontends da Fase 5 na mesma matriz de tamanhos.
+
+## Largura e layout responsivo
+
+Em **Experimentar**, abra **Estrutura e estilo**. Em **Editar**, selecione a raiz da página. A configuração **Largura do conteúdo** oferece três modos.
+
+- **Fluida** ocupa a área disponível e é o padrão dos novos projetos.
+- **Centralizada** limita o conteúdo a 1440 px e o centraliza quando sobra espaço.
+- **Personalizada** aplica um limite escolhido entre 320 e 3840 px. O conteúdo continua encolhendo quando a área disponível é menor.
+
+A largura é salva em `root.props.layoutWidth` e acompanha o documento em `design.json`, no contrato `DESIGN.md` e no frontend exportado. Documentos sem essa propriedade aparecem como **Layout anterior** e conservam seus limites anteriores até que um modo seja escolhido e salvo.
+
+`RootLayout` aplica a largura global em Experimentar, Editar, Apresentar e no frontend React. O CSS compartilhado e as consultas de contêiner permitem que grids e navegação respondam ao espaço disponível em cada seção, inclusive dentro de slots. Os limites de leitura e de formulários são locais. Tabelas que precisam de mais espaço têm uma região própria de rolagem. Os templates iniciais passam a usar ações genéricas. As propriedades que configuram ações continuam disponíveis no catálogo.
+
+### Verificação responsiva
+
+O teste de navegador percorre os três templates, a estrutura em branco e uma composição com os 20 blocos do catálogo, incluindo grade, abas, card e formulário aninhados. Em cada ambiente ele redimensiona a janela, verifica a largura, o overflow e a continuidade do mesmo nó de layout. As combinações cobrem Fluida, Centralizada e Personalizada, além de sidebar, rail, topo, as três densidades e os temas claro e escuro.
+
+As 120 verificações no Chromium passaram em 390×844, 768×1024, 1366×768, 1920×1080, 2560×1440 e 3440×1440. A página ficou sem overflow horizontal, e a grade de teste passou de uma para quatro colunas entre os extremos. A tabela rolou dentro da própria região em tela estreita. A matriz usa uma combinação de largura, navegação, densidade e tema por cenário.
+
+Os cinco ZIPs passaram por instalação, typecheck, build e execução independente. Na comparação complementar de 15 pares de capturas de Apresentar e do frontend exportado, nove coincidiram e a maior diferença normalizada registrada pelo ImageMagick foi 0,016%. Passaram também os 12 testes automatizados do AccioDesign, o typecheck, o build e as regressões de navegação, salvamento, exportação e estabilidade de foco e estado nos slots.
+
+Com o AccioDesign rodando na porta 5199 e um `ACCIO_DATA_DIR` temporário, execute os comandos abaixo.
+
+```sh
+ACCIO_TEST_RESPONSIVE=1 node tests/executable-export.mjs
+node tests/responsive-layout.browser.mjs <diretório-impresso>
+bash tests/responsive-width-controls.browser.sh
+```
+
+O primeiro script extrai e compila os cinco frontends em `TMPDIR` (ou no diretório temporário do sistema). O segundo usa agent-browser e grava o relatório `responsividade.json` ao lado dos pacotes. O terceiro verifica a persistência ao alternar entre Experimentar, Editar e Apresentar.

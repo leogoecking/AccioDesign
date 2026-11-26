@@ -81,7 +81,7 @@ export const CompoundContent = ({
             {heading ? (
               <h2
                 className={cn(
-                  "font-heading text-2xl font-semibold tracking-tight md:text-3xl lg:max-w-xl",
+                  "font-heading text-2xl font-semibold tracking-tight @min-[768px]/section:text-3xl @min-[1024px]/section:max-w-xl",
                   textAlignClassnames
                 )}
               >
@@ -93,9 +93,9 @@ export const CompoundContent = ({
                 className={cn(
                   "text-sm leading-relaxed text-muted-foreground md:text-base",
                   {
-                    "lg:max-w-md":
+                    "@min-[1024px]/section:max-w-md":
                       alignContent === "start" || alignContent === "end",
-                    "lg:max-w-xl": alignContent === "center",
+                    "@min-[1024px]/section:max-w-xl": alignContent === "center",
                   },
                   textAlignClassnames
                 )}

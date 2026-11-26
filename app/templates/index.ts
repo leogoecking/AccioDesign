@@ -139,14 +139,15 @@ export function instantiateTemplate(
 ): AppData {
   const def = getTemplateDefinition(templateId);
   const fresh = cloneAndRefreshDocumentIds(def.buildData());
-  if (customTitle && customTitle.trim()) {
-    fresh.root = {
+  return {
+    ...fresh,
+    root: {
       ...fresh.root,
       props: {
         ...fresh.root?.props,
-        title: customTitle.trim(),
+        title: customTitle?.trim() || fresh.root?.props?.title || def.name,
+        layoutWidth: { mode: "fluid" },
       },
-    };
-  }
-  return fresh;
+    },
+  };
 }

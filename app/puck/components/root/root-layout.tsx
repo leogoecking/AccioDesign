@@ -2,7 +2,9 @@ import type { ReactNode } from "react";
 import { cn } from "cn";
 import { TooltipProvider } from "~/components/ui/tooltip";
 import {
+  getContentMaxWidth,
   LayoutModeProvider,
+  normalizeLayoutWidth,
   normalizeNavigationMode,
   normalizeVisualDensity,
   type NavigationMode,
@@ -16,6 +18,7 @@ export function RootLayout({
   density,
   mode,
   presetId,
+  layoutWidth,
 }: {
   children: ReactNode;
   surface?: "default" | "muted";
@@ -23,9 +26,13 @@ export function RootLayout({
   density?: VisualDensity;
   mode: "light" | "dark";
   presetId: string;
+  layoutWidth?: unknown;
 }) {
   const resolvedNavMode = normalizeNavigationMode(navigationMode);
   const resolvedDensity = normalizeVisualDensity(density);
+
+  const width = normalizeLayoutWidth(layoutWidth);
+  const maxWidth = getContentMaxWidth(width);
 
   return (
     <TooltipProvider>
@@ -36,13 +43,16 @@ export function RootLayout({
           data-theme-mode={mode}
           data-navigation-mode={resolvedNavMode}
           data-density={resolvedDensity}
+          data-accio-width={width?.mode ?? "legacy"}
           className={cn(
             "min-h-screen text-foreground antialiased",
             mode === "dark" && "dark",
             surface === "muted" ? "bg-muted/30" : "bg-background"
           )}
         >
-          {children}
+          <div className="accio-page-content" style={maxWidth ? { maxInlineSize: maxWidth } : undefined}>
+            {children}
+          </div>
         </div>
       </LayoutModeProvider>
     </TooltipProvider>

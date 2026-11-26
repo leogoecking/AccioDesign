@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 import type { RootConfig } from "@puckeditor/core";
+import { LayoutWidthField } from "~/components/layout-width-field";
+import type { LayoutWidth } from "~/puck/context/visual-layout-context";
 import { RootLayout } from "./root-layout";
 import { useIsEditorMode } from "~/puck/context/is-editor-mode-context";
 import type {
@@ -25,6 +27,7 @@ export type RootProps = {
   navigationMode?: NavigationMode;
   density?: VisualDensity;
   theme?: AccioThemeDocument;
+  layoutWidth?: LayoutWidth;
 };
 
 const RootRenderer = ({
@@ -33,12 +36,14 @@ const RootRenderer = ({
   navigationMode = "sidebar",
   density = "default",
   theme,
+  layoutWidth,
 }: {
   children: React.ReactNode;
   surface?: "default" | "muted";
   navigationMode?: NavigationMode;
   density?: VisualDensity;
   theme?: AccioThemeDocument;
+  layoutWidth?: LayoutWidth;
 }) => {
   const isEditorMode = useIsEditorMode();
   const themeDoc = normalizeThemeDocument(theme);
@@ -85,6 +90,7 @@ const RootRenderer = ({
         density={density}
         mode={mode}
         presetId={themeDoc.presetId}
+        layoutWidth={layoutWidth}
       >
         {children}
       </RootLayout>
@@ -110,6 +116,13 @@ const rootConfig: RootConfig<RootProps> = {
         { label: "Sutil", value: "muted" },
       ],
     },
+    layoutWidth: {
+      type: "custom",
+      label: "Largura do conteúdo",
+      render: ({ value, onChange, readOnly }) => (
+        <LayoutWidthField value={value} onChange={onChange} readOnly={readOnly} />
+      ),
+    },
     navigationMode: {
       type: "radio",
       label: "Modo de navegação",
@@ -128,12 +141,13 @@ const rootConfig: RootConfig<RootProps> = {
     density: "default",
     theme: createThemeFromPreset("default", "light"),
   },
-  render: ({ children, surface, navigationMode, density, theme }) => (
+  render: ({ children, surface, navigationMode, density, theme, layoutWidth }) => (
     <RootRenderer
       surface={surface}
       navigationMode={navigationMode}
       density={density}
       theme={theme}
+      layoutWidth={layoutWidth}
     >
       {children}
     </RootRenderer>

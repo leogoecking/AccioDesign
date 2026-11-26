@@ -104,13 +104,6 @@ export const dashboardOperacionalTemplate: TemplateDefinition = {
                 },
                 actions: [
                   {
-                    label: "Exportar resumo",
-                    url: "#exportar",
-                    variant: "outline",
-                    size: "default",
-                    icon: "download",
-                  },
-                  {
                     label: "Registrar ocorrência",
                     url: "#ocorrencia",
                     variant: "default",

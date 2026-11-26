@@ -87,3 +87,27 @@
   padding-inline: 1.5rem;
   margin-inline: auto;
 }
+
+.accio-page-content {
+  inline-size: 100%;
+  min-inline-size: 0;
+  margin-inline: auto;
+  overflow-wrap: anywhere;
+}
+
+[data-accio-width="legacy"] .accio-navigation-frame {
+  max-inline-size: 1440px;
+}
+
+[data-accio-width="legacy"] .accio-shell-body {
+  min-block-size: 520px;
+}
+
+[data-accio-width]:not([data-accio-width="legacy"]) .accio-section {
+  max-width: none;
+  padding-inline: min(1.5rem, 6%);
+}
+
+[data-accio-width]:not([data-accio-width="legacy"]) .accio-form-split {
+  max-inline-size: 64rem;
+}

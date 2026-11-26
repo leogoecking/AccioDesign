@@ -5,7 +5,10 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto"
+      className="relative w-full min-w-0 max-w-full overflow-x-auto"
+      role="region"
+      aria-label="Tabela com rolagem horizontal"
+      tabIndex={0}
     >
       <table
         data-slot="table"

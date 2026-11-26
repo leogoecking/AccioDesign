@@ -73,10 +73,10 @@ export const AppSidebar = ({
 
   const mainPaddingClass =
     density === "compact"
-      ? "p-3 md:p-4"
+      ? "p-3 @min-[768px]/shell:p-4"
       : density === "comfortable"
-        ? "p-5 md:p-8"
-        : "p-4 md:p-6";
+        ? "p-5 @min-[768px]/shell:p-8"
+        : "p-4 @min-[768px]/shell:p-6";
 
   const preventInEditor = (event: React.MouseEvent) => {
     if (isEditorMode) {
@@ -84,7 +84,7 @@ export const AppSidebar = ({
     }
   };
 
-  const renderMobileStrip = (extraClassName = "md:hidden") => (
+  const renderMobileStrip = (extraClassName = "@min-[768px]/shell:hidden") => (
     <div className={cn("border-b bg-sidebar text-sidebar-foreground", extraClassName)}>
       <div className="flex items-center justify-between gap-3 px-4 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
@@ -141,7 +141,7 @@ export const AppSidebar = ({
 
   return (
     <ErrorBoundary>
-      <div className="mx-auto w-full max-w-[1440px] px-3 py-3 sm:px-6 sm:py-4">
+      <div className="accio-navigation-frame @container/shell mx-auto w-full min-w-0 px-3 py-3 sm:px-6 sm:py-4">
         <div
           data-testid="app-sidebar-shell"
           data-nav-mode={navigationMode}
@@ -150,7 +150,7 @@ export const AppSidebar = ({
           })}
         >
           {navigationMode === "topnav" ? (
-            <div className="flex min-h-[520px] flex-col">
+            <div className="accio-shell-body flex flex-col">
               <header className="border-b bg-sidebar px-4 py-3 text-sidebar-foreground">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
@@ -169,7 +169,7 @@ export const AppSidebar = ({
 
                   <nav
                     aria-label="Navegação superior"
-                    className="order-3 flex w-full flex-wrap items-center gap-1 pt-1 lg:order-2 lg:w-auto lg:pt-0"
+                    className="order-3 flex min-w-0 w-full flex-wrap items-center gap-1 pt-1 @min-[1024px]/shell:order-2 @min-[1024px]/shell:w-auto @min-[1024px]/shell:pt-0"
                   >
                     {flatItems.map((item, idx) => (
                       <a
@@ -177,7 +177,7 @@ export const AppSidebar = ({
                         href={item.url || "#"}
                         onClick={preventInEditor}
                         className={cn(
-                          "inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+                          "inline-flex max-w-full items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
                           item.active
                             ? "bg-sidebar-accent text-sidebar-accent-foreground"
                             : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
@@ -198,13 +198,13 @@ export const AppSidebar = ({
                   </nav>
 
                   {user?.name ? (
-                    <div className="order-2 flex items-center gap-2.5 lg:order-3">
+                    <div className="order-2 flex items-center gap-2.5 @min-[1024px]/shell:order-3">
                       <Avatar size="sm">
                         <AvatarFallback>
                           {user.initials || user.name.slice(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="hidden min-w-0 flex-col leading-tight sm:flex">
+                      <div className="hidden min-w-0 flex-col leading-tight @min-[640px]/shell:flex">
                         <span className="truncate text-xs font-medium">
                           {user.name}
                         </span>
@@ -223,11 +223,11 @@ export const AppSidebar = ({
               </main>
             </div>
           ) : navigationMode === "rail" ? (
-            <div className="flex min-h-[520px] flex-col md:flex-row">
-              {renderMobileStrip("md:hidden")}
+            <div className="accio-shell-body flex flex-col @min-[768px]/shell:flex-row">
+              {renderMobileStrip("@min-[768px]/shell:hidden")}
               <aside
                 aria-label="Navegação compacta"
-                className="hidden w-16 shrink-0 flex-col items-center justify-between border-r bg-sidebar py-3 text-sidebar-foreground md:flex"
+                className="hidden w-16 shrink-0 flex-col items-center justify-between border-r bg-sidebar py-3 text-sidebar-foreground @min-[768px]/shell:flex"
               >
                 <div className="flex flex-col items-center gap-3">
                   <Tooltip>
@@ -301,10 +301,10 @@ export const AppSidebar = ({
               </main>
             </div>
           ) : (
-            <div className="flex min-h-[520px] flex-col">
-              {renderMobileStrip("md:hidden")}
-              <SidebarProvider className="min-h-[520px] w-full">
-                <Sidebar collapsible="none" className="hidden h-auto min-h-full border-r md:flex">
+            <div className="accio-shell-body flex flex-col">
+              {renderMobileStrip("@min-[768px]/shell:hidden")}
+              <SidebarProvider className="min-h-0 w-full flex-1">
+                <Sidebar collapsible="none" className="hidden h-auto shrink-0 border-r @min-[768px]/shell:flex">
                   <SidebarHeader className="border-b px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="flex size-8 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
