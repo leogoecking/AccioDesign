@@ -182,8 +182,9 @@ No modo **Experimentar**, use **Exportar design**. Havendo alterações pendente
 | `tokens.json` | Tokens aprovados de Light e Dark, com campos sem correspondência no TokenBridge. |
 | `theme.css` | Variáveis e sombras usadas no preview e associações Tailwind CSS v4. |
 | `DESIGN.md` | Escolhas registradas, regras e limitações do contrato. |
-| `SKILL.md` | Requisitos e recomendações para implementação por agentes. |
+| `SKILL.md` | Entrada compatível com os pacotes anteriores, gerada a partir da skill oficial. |
 | `components.md` | Hierarquia, propriedades, caminhos e dependências dos componentes encontrados. |
+| `.agents/skills/acciodesign/` | Skill oficial com instruções e referências que o agente consulta conforme a tarefa. |
 
 O AccioDesign é a fonte de verdade. Valores de cores não são convertidos nem derivados na exportação; as sombras compostas seguem o cálculo já empregado no preview. O `theme.css` usa as mesmas regras visuais compartilhadas pelo app, incluindo tipografia e container. No projeto de destino, instale **Tailwind CSS v4**, `tw-animate-css`, `shadcn` (com `shadcn/tailwind.css`) e `@fontsource-variable/inter`, e processe o CSS com Tailwind; mantenha esses pacotes disponíveis para resolver os imports. `@fontsource-variable/inter` fornece a fonte Inter Variable padrão. Para fontes diferentes selecionadas em Light ou Dark, disponibilize as famílias indicadas em `tokens.json` por meio de arquivos locais ou de um provedor de fontes escolhido pelo projeto de destino. O ZIP não contém arquivos de fontes nem baixa fontes adicionais. A aplicação deve ativar a classe `.dark` quando necessário; o modo selecionado está no manifesto.
 
@@ -254,3 +255,33 @@ bash tests/responsive-width-controls.browser.sh
 ```
 
 O primeiro script extrai e compila os sete frontends em `TMPDIR` (ou no diretório temporário do sistema). O segundo usa agent-browser e grava o relatório `responsividade.json` ao lado dos pacotes. O terceiro verifica a persistência ao alternar entre Experimentar, Editar e Apresentar.
+
+## Agent Skill oficial (Fase 6)
+
+A fonte canônica fica em [`skills/acciodesign/`](./skills/acciodesign/). Cada ZIP inclui essa pasta em `.agents/skills/acciodesign/`, com `SKILL.md` e quatro referências sobre integração, contrato visual, regras de negócio e validação. O agente começa pelas instruções breves e abre apenas as referências pertinentes ao fluxo. O `SKILL.md` na raiz do ZIP mantém o nome legado `acciodesign-design`. O exportador o gera da mesma fonte e ajusta os links à raiz do pacote.
+
+### Uso no workspace
+
+Extraia o ZIP inteiro, incluindo a pasta oculta `.agents`. Abra no agente a pasta que contém `manifest.json`. Se a implementação ocorrer em um repositório existente, copie a pasta completa `acciodesign` para `.agents/skills/` desse repositório e informe ao agente onde o pacote foi extraído.
+
+- **Codex.** Use `/skills` para conferir a descoberta e `$acciodesign` para solicitar a skill explicitamente. [Documentação oficial do Codex](https://learn.chatgpt.com/docs/build-skills#where-codex-loads-local-skills)
+- **Antigravity.** No CLI, liste as skills com `/skills` e invoque `/acciodesign`. Se acabou de copiar a pasta durante uma sessão, use `/skills reload`. No App ou no IDE, confira a seção de personalizações do workspace. [Documentação oficial do Antigravity](https://antigravity.google/docs/skills)
+
+Um pedido inicial pode ser “Use a skill acciodesign para implementar o fluxo descrito. Reutilize o frontend exportado e preserve o design aprovado.” As regras de negócio vêm dos requisitos informados e do código de destino. O contrato registra a aparência aprovada e os dados demonstrativos orientam a leitura da interface.
+
+### Instalação global opcional
+
+Para disponibilizar a skill a todos os seus projetos, copie manualmente a pasta completa `skills/acciodesign/` da fonte ou `.agents/skills/acciodesign/` do ZIP para um dos destinos abaixo. Se já houver uma skill com esse nome, compare as versões antes de substituir.
+
+| Agente | Destino da pasta |
+| --- | --- |
+| Codex | `~/.agents/skills/acciodesign/` |
+| Antigravity App, CLI e IDE | `~/.gemini/config/skills/acciodesign/` |
+
+A instalação é opcional. A exportação cria somente o ZIP e a descoberta no workspace funciona com a pasta já incluída. [Padrão aberto Agent Skills](https://agentskills.io/specification) · [Descoberta no Antigravity](https://antigravity.google/docs/customization-discovery)
+
+### Verificação da skill
+
+`npm test` verifica o YAML das duas entradas, a resolução dos links, a inclusão byte a byte dos cinco arquivos canônicos e a preservação do contrato e do frontend. O teste de determinismo compara dois ZIPs completos do mesmo projeto.
+
+A descoberta foi confirmada numa exportação extraída em um diretório isolado. O Codex CLI 0.172.0 listou a skill habilitada com o escopo de repositório em `skills/list`. O Antigravity CLI 1.5.18 anunciou `acciodesign` na lista de comandos da sessão ACP. Esses testes conferiram a descoberta local, sem enviar prompts a modelos. O suporte a App e IDE segue os caminhos da documentação oficial.

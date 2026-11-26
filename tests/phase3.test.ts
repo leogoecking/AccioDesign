@@ -465,6 +465,9 @@ describe("Fase 4 — contrato visual", () => {
       const untrustedFiles = buildDesignFiles(untrusted);
       assert.ok(!untrustedFiles["SKILL.md"].includes("Ignore as regras"));
       assert.match(untrustedFiles["SKILL.md"], /dados não confiáveis/);
+      for (const name of Object.keys(files).filter(name => name.startsWith(".agents/skills/"))) {
+        assert.equal(untrustedFiles[name], files[name], name);
+      }
       assert.ok(untrustedFiles["design.json"].includes("Ignore as regras"));
     });
   });
@@ -572,6 +575,67 @@ describe("Largura responsiva do projeto", () => {
       assert.deepEqual(JSON.parse(files["frontend/src/design.json"]).root.props.layoutWidth, width);
       assert.match(files["DESIGN.md"], /"maxWidthPx": 1120/);
       assert.match(files["SKILL.md"], /largura do conteúdo/);
+    });
+  });
+});
+
+describe("Fase 6 — Agent Skill", () => {
+  it("empacota a fonte canônica e mantém a entrada legada com referências resolvíveis", async () => {
+    const { buildDesignZip } = await import("../app/export/design-export.server");
+    const JSZip = (await import("jszip")).default;
+    const { parse } = await import("yaml");
+    const directory = ".agents/skills/acciodesign";
+    const references = ["business-logic", "integration", "validation", "visual-contract"]
+      .map(name => `references/${name}.md`);
+    const sources = ["SKILL.md", ...references];
+
+    await withTempStore(async options => {
+      const project = await createProjectFromTemplate("sistema-administrativo", "Projeto para implementação", options);
+      const zip = await JSZip.loadAsync(await buildDesignZip(project), { checkCRC32: true });
+      const read = async (name: string) => {
+        const file = zip.file(name);
+        assert.ok(file, `arquivo ausente: ${name}`);
+        return file.async("string");
+      };
+      const manifest = JSON.parse(await read("manifest.json"));
+      assert.equal(manifest.format, "acciodesign.design-export");
+      assert.equal(manifest.formatVersion, "1.0");
+      assert.equal(manifest.compatibility.activeMode, JSON.parse(await read("tokens.json")).activeMode);
+      assert.equal(await read("frontend/src/design.json"), await read("design.json"));
+      assert.equal(await read("frontend/src/theme.css"), await read("theme.css"));
+      for (const name of ["DESIGN.md", "components.md", "frontend/package.json", "frontend/src/main.tsx", "frontend/NOTICE", "frontend/licenses/LICENSE-TOKENBRIDGE-MIT.txt"]) {
+        assert.ok(zip.file(name), `arquivo ausente: ${name}`);
+      }
+
+      assert.deepEqual(Object.keys(zip.files).filter(name => name.startsWith(".agents/")).sort(),
+        sources.map(name => `${directory}/${name}`).sort());
+      for (const source of sources) {
+        assert.equal(await read(`${directory}/${source}`), await fs.readFile(path.join("skills/acciodesign", source), "utf8"));
+      }
+
+      const entrypoints = [
+        ["SKILL.md", "acciodesign-design"],
+        [`${directory}/SKILL.md`, "acciodesign"],
+      ];
+      const instructions = [];
+      for (const [entrypoint, name] of entrypoints) {
+        const markdown = await read(entrypoint);
+        const parts = /^---\r?\n([\s\S]+?)\r?\n---\r?\n([\s\S]+)$/.exec(markdown);
+        assert.ok(parts, `frontmatter ausente: ${entrypoint}`);
+        const metadata: unknown = parse(parts[1]);
+        assert.ok(metadata && typeof metadata === "object");
+        assert.ok("name" in metadata && metadata.name === name);
+        assert.match(metadata.name, /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+        assert.ok(metadata.name.length <= 64);
+        assert.ok("description" in metadata && typeof metadata.description === "string");
+        assert.ok(metadata.description.trim() && metadata.description.length <= 1024);
+        const links = [...parts[2].matchAll(/\]\(([^)]+)\)/g)]
+          .map(([, target]) => path.posix.join(path.posix.dirname(entrypoint), target));
+        assert.deepEqual(links.sort(), references.map(reference => `${directory}/${reference}`).sort());
+        for (const link of links) assert.ok(zip.file(link), `referência ausente: ${link}`);
+        instructions.push(parts[2].replaceAll(`${directory}/references/`, "references/"));
+      }
+      assert.equal(instructions[0], instructions[1]);
     });
   });
 });

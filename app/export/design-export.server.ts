@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import { agentSkillFiles } from "./agent-skill.server";
 import { buildReactFiles } from "./react-export.server";
 import { assertNoCredentials } from "./validate-export.server";
 import type { LocalProject } from "~/lib/projects.server";
@@ -6,7 +7,7 @@ import { buildThemeCssText } from "~/theme/apply-theme";
 import visualContractCss from "../theme/visual-contract.css?raw";
 import { normalizeThemeDocument } from "~/theme/schema";
 import { adaptThemeForExport, TOKENBRIDGE_UNMAPPED_FIELDS } from "./tokenbridge/adapter";
-import { makeComponentsMd, makeDesignMd, SKILL_MD } from "./tokenbridge/contracts";
+import { makeComponentsMd, makeDesignMd } from "./tokenbridge/contracts";
 
 export function buildDesignFiles(project: LocalProject): Record<string, string> {
   assertNoCredentials({ name: project.name, templateId: project.templateId, data: project.data });
@@ -33,8 +34,8 @@ export function buildDesignFiles(project: LocalProject): Record<string, string> 
     "tokens.json": json(adaptThemeForExport(theme)),
     "theme.css": css,
     "DESIGN.md": makeDesignMd(project, theme),
-    "SKILL.md": SKILL_MD,
     "components.md": makeComponentsMd(project),
+    ...agentSkillFiles,
     ...buildReactFiles(project, theme, css),
   };
 }
