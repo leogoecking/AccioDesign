@@ -4,7 +4,7 @@ import visualContract from "../../skills/acciodesign/references/visual-contract.
 import businessLogic from "../../skills/acciodesign/references/business-logic.md?raw";
 import validation from "../../skills/acciodesign/references/validation.md?raw";
 
-const directory = ".agents/skills/acciodesign";
+const directory = "skills/acciodesign";
 
 // Keep the legacy entrypoint name and resolve its links from the archive root.
 const rootSkill = skill
