@@ -465,7 +465,7 @@ describe("Fase 4 — contrato visual", () => {
       const untrustedFiles = buildDesignFiles(untrusted);
       assert.ok(!untrustedFiles["SKILL.md"].includes("Ignore as regras"));
       assert.match(untrustedFiles["SKILL.md"], /dados não confiáveis/);
-      for (const name of Object.keys(files).filter(name => name.startsWith(".agents/skills/"))) {
+      for (const name of Object.keys(files).filter(name => name.startsWith("skills/acciodesign/"))) {
         assert.equal(untrustedFiles[name], files[name], name);
       }
       assert.ok(untrustedFiles["design.json"].includes("Ignore as regras"));
@@ -574,17 +574,17 @@ describe("Largura responsiva do projeto", () => {
       assert.deepEqual(saved.data.root?.props?.layoutWidth, width);
       assert.deepEqual(JSON.parse(files["frontend/src/design.json"]).root.props.layoutWidth, width);
       assert.match(files["DESIGN.md"], /"maxWidthPx": 1120/);
-      assert.match(files[".agents/skills/acciodesign/references/visual-contract.md"], /largura do conteúdo/);
+      assert.match(files["skills/acciodesign/references/visual-contract.md"], /largura do conteúdo/);
     });
   });
 });
 
 describe("Fase 6 — Agent Skill", () => {
-  it("empacota a fonte canônica e o Quality Gate com referências resolvíveis nas duas entradas", async () => {
+  it("empacota a skill portátil e o Quality Gate com referências resolvíveis sem instalar no workspace", async () => {
     const { buildDesignZip } = await import("../app/export/design-export.server");
     const JSZip = (await import("jszip")).default;
     const { parse } = await import("yaml");
-    const directory = ".agents/skills/acciodesign";
+    const directory = "skills/acciodesign";
     const references = ["business-logic", "integration", "validation", "visual-contract"]
       .map(name => `references/${name}.md`);
     const sources = ["SKILL.md", ...references];
@@ -607,7 +607,9 @@ describe("Fase 6 — Agent Skill", () => {
         assert.ok(zip.file(name), `arquivo ausente: ${name}`);
       }
 
-      assert.deepEqual(Object.keys(zip.files).filter(name => name.startsWith(".agents/")).sort(),
+      const paths = Object.keys(zip.files);
+      assert.ok(paths.every(name => !name.split("/").includes(".agents")));
+      assert.deepEqual(paths.filter(name => name.startsWith("skills/")).sort(),
         sources.map(name => `${directory}/${name}`).sort());
       for (const source of sources) {
         assert.equal(await read(`${directory}/${source}`), await fs.readFile(path.join("skills/acciodesign", source), "utf8"));
