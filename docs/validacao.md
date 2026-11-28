@@ -55,7 +55,7 @@ node tests/responsive-layout.browser.mjs <diretório-impresso>
 bash tests/responsive-width-controls.browser.sh
 ```
 
-A matriz inclui os três templates, a estrutura em branco, uma composição com os 25 blocos e dois documentos com shell curto em modo Fluido e legado. Cada cenário usa uma combinação de largura, navegação, densidade e tema em Experimentar, Editar, Apresentar e no frontend exportado. O script redimensiona a janela, mede largura, altura e overflow, e verifica a identidade do nó de layout. A regressão do shell longo rola até o último formulário. O relatório `responsividade.json` fica ao lado dos sete pacotes extraídos, dentro de `TMPDIR` ou do diretório temporário do sistema. O último comando verifica a persistência da largura ao alternar entre os modos.
+A matriz inclui os três templates, a estrutura em branco, uma composição com os 30 blocos e dois documentos com shell curto em modo Fluido e legado. Cada cenário usa uma combinação de largura, navegação, densidade e tema em Experimentar, Editar, Apresentar e no frontend exportado. O script redimensiona a janela, mede largura, altura e overflow, e verifica a identidade do nó de layout. A regressão do shell longo rola até o último formulário. O relatório `responsividade.json` fica ao lado dos sete pacotes extraídos, dentro de `TMPDIR` ou do diretório temporário do sistema. O último comando verifica a persistência da largura ao alternar entre os modos.
 
 Na validação da responsividade global, as 168 verificações passaram em 390×844, 768×1024, 1366×768, 1920×1080, 2560×1440 e 3440×1440. O shell curto ocupou a altura disponível em modo Fluido, o longo permitiu rolar até o formulário e a página permaneceu sem overflow horizontal. A grade passou de uma para quatro colunas e a tabela rolou na própria região. Dos 21 pares comparados, 15 coincidiram, com diferença normalizada máxima de 0,016%.
 
@@ -87,3 +87,15 @@ O script [tests/analytics-blocks.browser.mjs](../tests/analytics-blocks.browser.
 - Validação de estados vazios (`data: []`), séries zeradas (`0`), múltiplas instâncias simultâneas (`AreaChart` e `SparklineCard`) e ausência de colisão de IDs internos de SVG (`defs [id]` e `[data-chart]`).
 - Validação em **Experimentar** (Claro/Escuro com troca de presets e densidade no iframe), **Editar** (categoria `Gráficos e análise` no Puck), **Apresentar** (Desktop `1440x900` e Mobile `390x844` sem overflow) e **frontend exportado** (renderização com 6 superfícies `svg.recharts-surface` ativas, 0 erros de console/página, 0 warnings `width(-1)` e paridade visual/DOM idêntica entre Apresentar e o pacote exportado).
 - Capturas registradas em [docs/screenshots/](../docs/screenshots/): `analytics-composition-light.png`, `analytics-composition-dark.png`, `analytics-exported-frontend.png` e `analytics-mobile.png`.
+
+## Informações e atividades (Fase 8.2)
+
+```bash
+npx impeccable detect app/components/ui/fallback-avatar.tsx app/components/ui/copy-button.tsx app/puck/config/components/activity-timeline/activity-timeline.tsx app/puck/config/components/record-list/record-list.tsx app/puck/config/components/progress-card/progress-card.tsx app/puck/config/components/agenda-card/agenda-card.tsx app/puck/config/components/notification-list/notification-list.tsx --json
+npm test && npm run typecheck && npm run build
+node tests/information-blocks.browser.mjs
+```
+
+- A suíte unitária cobre o catálogo com 30 blocos, contratos TokenBridge, empacotamento seletivo dos primitivos Spell UI (`fallback-avatar.tsx`, `copy-button.tsx`) e de `licenses/LICENSE-SPELLUI-MIT.txt` apenas quando o projeto usa `RecordList` ou `NotificationList`, além da ausência de `recharts` fora da categoria de gráficos (17/17 testes).
+- A verificação real no navegador valida estados vazios, estados real/erro e sucesso no `CopyButton` (`data-copy-status`), strings longas sem quebra em `390x844` sem overflow horizontal, Modo Experimentar (Ocean Breeze Dark + densidades Compacto/Padrão/Confortável), categoria no Editor Puck com edição ao vivo de propriedades, Modo Apresentar com alternância interativa de leitura no `NotificationList`, build + execução do frontend React exportado e paridade DOM/visual em desktop (`1440x900`), tablet (`768x1024`) e mobile (`390x844`).
+- Capturas registradas em [docs/screenshots/](../docs/screenshots/): `information-composition-light.png`, `information-composition-dark.png`, `information-exported-frontend.png` e `information-mobile.png`.

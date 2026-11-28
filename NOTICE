@@ -42,3 +42,9 @@ upon the following open-source projects:
 - Recharts
   https://github.com/recharts/recharts
   Licensed under the MIT License.
+
+- Spell UI
+  https://github.com/xxtomm/spell-ui
+  Copyright (c) 2025 Spell UI. Licensed under the MIT License.
+  See `app/export/licenses/LICENSE-SPELLUI-MIT.txt` and
+  `THIRD_PARTY_NOTICES.md` for selective adaptations.

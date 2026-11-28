@@ -270,7 +270,7 @@ describe("AccioDesign Fase 3 — Templates, Persistência Isolada e Compatibilid
   it("mantém compatibilidade integral entre Experimentar, Editar e Apresentar com o catálogo do Puck", () => {
     const registeredComponents = new Set(Object.keys(config.components));
     assert.equal(registeredComponents.has("KanbanBoard"), true);
-    assert.equal(registeredComponents.size, 25);
+    assert.equal(registeredComponents.size, 30);
 
     for (const template of GALLERY_TEMPLATES_META) {
       const data = instantiateTemplate(template.id);
@@ -474,7 +474,7 @@ describe("Fase 4 — contrato visual", () => {
 });
 
 describe("Fase 5 — frontend React exportado", () => {
-  it("inclui as 25 views e dependências permitidas sem incorporar o editor", async () => {
+  it("inclui as 30 views e dependências permitidas sem incorporar o editor", async () => {
     const { buildDesignFiles } = await import("../app/export/design-export.server");
     const blank = instantiateTemplate("em-branco");
     const data = {
@@ -763,5 +763,270 @@ describe("Fase 8.1 — Gráficos e análise de dados", () => {
 
       assert.deepStrictEqual(await buildDesignZip(project), await buildDesignZip(project));
     }
+  });
+});
+
+describe("Fase 8.2 — Informações e atividades", () => {
+  it("registra os cinco blocos na categoria Informações e atividades preservando os 25 anteriores", () => {
+    const category = config.categories?.informacoes;
+    assert.ok(category);
+    assert.equal(category.title, "Informações e atividades");
+    assert.deepEqual(category.components, [
+      "ActivityTimeline",
+      "RecordList",
+      "ProgressCard",
+      "AgendaCard",
+      "NotificationList",
+    ]);
+
+    assert.equal(Object.keys(config.components).length, 30);
+    for (const name of category.components!) {
+      assert.ok(config.components[name as keyof typeof config.components], name);
+    }
+  });
+
+  it("inclui primitivas Spell UI e licença MIT apenas quando utilizadas, sem recharts ou Puck", async () => {
+    const { buildDesignFiles, buildDesignZip } = await import("../app/export/design-export.server");
+    const blocks = [
+      ["ActivityTimeline", "activity-timeline", false, false],
+      ["RecordList", "record-list", true, true],
+      ["ProgressCard", "progress-card", false, false],
+      ["AgendaCard", "agenda-card", false, false],
+      ["NotificationList", "notification-list", true, false],
+    ] as const;
+
+    for (const template of ALL_TEMPLATES_META) {
+      const data = instantiateTemplate(template.id);
+      const files = buildDesignFiles({
+        id: `proj-spell-check-${template.id}`,
+        name: template.name,
+        templateId: template.id,
+        createdAt: "",
+        updatedAt: "",
+        data,
+      });
+      assert.equal("frontend/src/components/ui/fallback-avatar.tsx" in files, false);
+      assert.equal("frontend/src/components/ui/copy-button.tsx" in files, false);
+      assert.equal("frontend/licenses/LICENSE-SPELLUI-MIT.txt" in files, false);
+    }
+
+    for (const [type, slug, usesAvatar, usesCopy] of blocks) {
+      const entry = config.components[type];
+      const base = instantiateTemplate("em-branco", `Teste ${type}`);
+      base.content = [
+        { type, props: { ...entry.defaultProps, id: `${type}-solo` } },
+      ] as typeof base.content;
+
+      const project = {
+        id: `proj-${slug}`,
+        name: `Teste ${type}`,
+        templateId: "em-branco",
+        createdAt: "",
+        updatedAt: "",
+        data: base,
+      };
+      const files = buildDesignFiles(project);
+      const pkg = JSON.parse(files["frontend/package.json"]);
+
+      assert.equal("recharts" in pkg.dependencies, false, `${type} não deve incluir recharts`);
+      assert.equal("@puckeditor/core" in pkg.dependencies, false);
+      assert.ok(files[`frontend/src/puck/config/components/${slug}/${slug}.tsx`]);
+      assert.match(files["components.md"], new RegExp(type));
+
+      assert.equal(
+        "frontend/src/components/ui/fallback-avatar.tsx" in files,
+        usesAvatar,
+        `${type} fallback-avatar.tsx`
+      );
+      assert.equal(
+        "frontend/src/components/ui/copy-button.tsx" in files,
+        usesCopy,
+        `${type} copy-button.tsx`
+      );
+      assert.equal(
+        "frontend/licenses/LICENSE-SPELLUI-MIT.txt" in files,
+        usesAvatar || usesCopy,
+        `${type} LICENSE-SPELLUI-MIT.txt`
+      );
+
+      for (const [otherType, otherSlug] of blocks) {
+        if (otherType !== type) {
+          assert.equal(
+            `frontend/src/puck/config/components/${otherSlug}/${otherSlug}.tsx` in files,
+            false,
+            `${type} não deve exportar ${otherSlug}`
+          );
+        }
+      }
+
+      assert.deepStrictEqual(await buildDesignZip(project), await buildDesignZip(project));
+    }
+  });
+
+  it("garante limites ARIA, texto acessível e tratamento de meta zerada no ProgressCard", async () => {
+    const { createElement } = await import("react");
+    const { renderToStaticMarkup } = await import("react-dom/server");
+    const { ProgressCard, resolveProgressMetrics } = await import(
+      "../app/puck/config/components/progress-card/progress-card"
+    );
+
+    const normal = resolveProgressMetrics({
+      label: "Adoção",
+      current: 40,
+      target: 100,
+      format: "number",
+    });
+    assert.equal(normal.ariaValueMin, 0);
+    assert.equal(normal.ariaValueMax, 100);
+    assert.equal(normal.ariaValueNow, 40);
+    assert.equal(normal.ariaValueText, undefined);
+    assert.equal(normal.isExceeded, false);
+
+    const exceeded = resolveProgressMetrics({
+      label: "Receita",
+      current: 135,
+      target: 100,
+      format: "number",
+      unit: "vendas",
+    });
+    assert.equal(exceeded.ariaValueMin, 0);
+    assert.equal(exceeded.ariaValueMax, 100);
+    assert.equal(exceeded.ariaValueNow, 100);
+    assert.equal(exceeded.rawPct, 135);
+    assert.equal(exceeded.fillPct, 100);
+    assert.equal(exceeded.isExceeded, true);
+    assert.match(exceeded.ariaValueText ?? "", /135%.*135 vendas.*meta ultrapassada/);
+
+    const zeroWithValue = resolveProgressMetrics({
+      label: "Fila avulsa",
+      current: 24,
+      target: 0,
+      format: "number",
+      unit: "itens",
+    });
+    assert.equal(zeroWithValue.hasTarget, false);
+    assert.equal(zeroWithValue.ariaValueMin, 0);
+    assert.equal(zeroWithValue.ariaValueMax, 100);
+    assert.equal(zeroWithValue.ariaValueNow, 0);
+    assert.equal(zeroWithValue.rawPct, null);
+    assert.match(zeroWithValue.ariaValueText ?? "", /Meta não definida.*24 itens/);
+
+    const html = renderToStaticMarkup(
+      createElement(ProgressCard, {
+        title: "Metas de Regressão",
+        showPercentage: true,
+        showValues: true,
+        items: [
+          { label: "Meta ultrapassada", current: 135, target: 100, format: "number", unit: "vendas" },
+          { label: "Meta zerada com valor", current: 24, target: 0, format: "number", unit: "itens" },
+          { label: "Meta zerada vazia", current: 0, target: 0, format: "number" },
+        ],
+      })
+    );
+    assert.match(html, /aria-valuenow="100"[^>]*aria-valuemin="0"[^>]*aria-valuemax="100"/);
+    assert.match(html, /aria-valuetext="135% \(135 vendas de 100 vendas, meta ultrapassada\)"/);
+    assert.match(html, />135%</);
+    assert.match(html, /width:100%/);
+    assert.match(html, /aria-valuenow="0"[^>]*aria-valuemin="0"[^>]*aria-valuemax="100"/);
+    assert.match(html, /aria-valuetext="Meta não definida \(valor atual: 24 itens\)"/);
+    assert.match(html, /Sem meta/);
+    assert.doesNotMatch(html, />0%</);
+
+    const valuesOnlyZeroHtml = renderToStaticMarkup(
+      createElement(ProgressCard, {
+        title: "Somente valores",
+        showPercentage: false,
+        showValues: true,
+        items: [{ label: "Sem alvo", current: 12, target: 0, format: "number", unit: "chamados" }],
+      })
+    );
+    assert.match(valuesOnlyZeroHtml, /12 chamados · sem meta/);
+    assert.doesNotMatch(valuesOnlyZeroHtml.replace(/<[^>]+>/g, " "), /%/);
+  });
+
+  it("mantém agrupamentos estáveis e preserva ou reconcilia leitura no NotificationList", async () => {
+    const { createElement } = await import("react");
+    const { renderToStaticMarkup } = await import("react-dom/server");
+    const {
+      NotificationList,
+      buildExternalReadMap,
+      reconcileNotificationReadState,
+      resolveNotificationKeys,
+    } = await import("../app/puck/config/components/notification-list/notification-list");
+
+    const baseItems = [
+      { id: "n1", title: "Alerta 1", timestamp: "Agora", read: false, priority: "alta" as const },
+      { id: "n2", title: "Alerta 2", timestamp: "Há 5 min", read: false, priority: "normal" as const },
+      { id: "n3", title: "Alerta 3", timestamp: "Há 1 hora", read: true, priority: "baixa" as const },
+    ];
+
+    assert.deepEqual(resolveNotificationKeys(baseItems), ["n1", "n2", "n3"]);
+
+    const html = renderToStaticMarkup(
+      createElement(NotificationList, {
+        title: "Central",
+        grouped: true,
+        items: baseItems,
+      })
+    );
+    assert.match(html, /data-section="unread"/);
+    assert.match(html, /data-section="read"/);
+    assert.match(html, /data-notification-key="n1"/);
+
+    // Override local em n1 (usuário marcou n1 como lida localmente)
+    const initialState = {
+      externalReadByKey: buildExternalReadMap(baseItems),
+      overrides: { n1: true },
+    };
+
+    // Nova referência de array com conteúdo equivalente NÃO deve reinicializar overrides
+    const clonedEquivalentItems = structuredClone(baseItems);
+    const afterEquivalent = reconcileNotificationReadState(
+      initialState,
+      buildExternalReadMap(clonedEquivalentItems)
+    );
+    assert.strictEqual(afterEquivalent, initialState);
+    assert.deepEqual(afterEquivalent.overrides, { n1: true });
+
+    // Alteração externa real em n2 (read: false -> true) deve atualizar n2 mantendo override local de n1
+    const updatedOtherExternal = [
+      { ...baseItems[0] },
+      { ...baseItems[1], read: true },
+      { ...baseItems[2] },
+    ];
+    const afterOtherUpdate = reconcileNotificationReadState(
+      afterEquivalent,
+      buildExternalReadMap(updatedOtherExternal)
+    );
+    assert.notStrictEqual(afterOtherUpdate, afterEquivalent);
+    assert.equal(afterOtherUpdate.externalReadByKey.n2, true);
+    assert.deepEqual(afterOtherUpdate.overrides, { n1: true });
+
+    // Alteração externa real em n1 (read: false -> true) deve limpar o override obsoleto e adotar valor externo
+    const updatedSelfExternal = [
+      { ...baseItems[0], read: true },
+      { ...baseItems[1], read: true },
+      { ...baseItems[2] },
+    ];
+    const afterSelfUpdate = reconcileNotificationReadState(
+      afterOtherUpdate,
+      buildExternalReadMap(updatedSelfExternal)
+    );
+    assert.deepEqual(afterSelfUpdate.overrides, {});
+    assert.equal(afterSelfUpdate.externalReadByKey.n1, true);
+
+    // Nova alteração externa em n1 (read: true -> false) + remoção de n3 + inclusão de n4
+    const updatedAndAddedExternal = [
+      { ...baseItems[0], read: false },
+      { ...baseItems[1], read: true },
+      { id: "n4", title: "Alerta 4", timestamp: "Agora", read: false, priority: "normal" as const },
+    ];
+    const afterAddRemove = reconcileNotificationReadState(
+      { ...afterSelfUpdate, overrides: { n3: false } },
+      buildExternalReadMap(updatedAndAddedExternal)
+    );
+    assert.equal(afterAddRemove.externalReadByKey.n1, false);
+    assert.equal(afterAddRemove.externalReadByKey.n4, false);
+    assert.equal("n3" in afterAddRemove.overrides, false);
   });
 });
