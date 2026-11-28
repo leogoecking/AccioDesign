@@ -4,12 +4,12 @@
 
 Escolha uma estrutura, experimente temas e aprove o resultado no navegador antes de implementar as funcionalidades. O AccioDesign exporta um **frontend React reutilizável e executável**, junto com o contrato visual e uma skill que orienta agentes a trabalhar sobre o código aprovado. Assim, a equipe pode evoluir a interface sem recomeçar a implementação a partir de uma captura, um protótipo ou um prompt.
 
-- **Composição visual** com Puck, três templates, uma estrutura em branco e um catálogo de 20 blocos.
+- **Composição visual** com Puck, três templates, uma estrutura em branco e um catálogo de 25 blocos (incluindo a categoria **Gráficos e análise** com `AreaChart`, `BarChart`, `LineChart`, `DonutChart` e `SparklineCard`).
 - **Personalização em tempo real** com 43 presets, temas claro e escuro, tipografia, densidade, largura e navegação.
 - **Exportação local** com o documento, os tokens e as views React usadas na apresentação.
 - **Integração com agentes** com instruções de reutilização e verificação para Codex e Antigravity.
 
-O editor usa React, React Router e Puck. A interface usa Tailwind CSS v4 e shadcn/ui, com módulos de tema adaptados do Tweakcn e de exportação adaptados do TokenBridge.
+O editor usa React, React Router e Puck. A interface usa Tailwind CSS v4, shadcn/ui e Recharts (incluído apenas quando gráficos são usados no projeto), com módulos de tema adaptados do Tweakcn e de exportação adaptados do TokenBridge.
 
 ![Galeria do AccioDesign com as três estruturas iniciais](./docs/screenshots/gallery-desktop.png)
 

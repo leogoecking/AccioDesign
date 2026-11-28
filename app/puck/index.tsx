@@ -54,6 +54,22 @@ import FilterBar, {
   type FilterBarProps,
 } from "~/puck/config/components/filter-bar";
 
+import AreaChart, {
+  type AreaChartProps,
+} from "~/puck/config/components/area-chart";
+import BarChart, {
+  type BarChartProps,
+} from "~/puck/config/components/bar-chart";
+import LineChart, {
+  type LineChartProps,
+} from "~/puck/config/components/line-chart";
+import DonutChart, {
+  type DonutChartProps,
+} from "~/puck/config/components/donut-chart";
+import SparklineCard, {
+  type SparklineCardProps,
+} from "~/puck/config/components/sparkline-card";
+
 import {
   EditorModeProvider as VisualEditorModeProvider,
   type EditorModeProviderProps,
@@ -81,6 +97,11 @@ export type Props = {
   KeyValueTable: KeyValueTableProps;
   FormBlock: FormBlockProps;
   FilterBar: FilterBarProps;
+  AreaChart: AreaChartProps;
+  BarChart: BarChartProps;
+  LineChart: LineChartProps;
+  DonutChart: DonutChartProps;
+  SparklineCard: SparklineCardProps;
 };
 
 export type Config = PuckConfig<Props, RootProps>;
@@ -124,6 +145,17 @@ export const config: Config = {
       defaultExpanded: true,
       components: ["FormBlock", "FilterBar"],
     },
+    graficos: {
+      title: "Gráficos e análise",
+      defaultExpanded: true,
+      components: [
+        "AreaChart",
+        "BarChart",
+        "LineChart",
+        "DonutChart",
+        "SparklineCard",
+      ],
+    },
   },
   components: {
     Header,
@@ -146,6 +178,11 @@ export const config: Config = {
     KeyValueTable,
     FormBlock,
     FilterBar,
+    AreaChart,
+    BarChart,
+    LineChart,
+    DonutChart,
+    SparklineCard,
   },
   root: rootConfig,
 };

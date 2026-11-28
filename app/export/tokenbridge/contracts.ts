@@ -34,6 +34,7 @@ const COMPONENT_PATHS: Record<string, string> = {
   Divider: "divider", KanbanBoard: "kanban-board", DashboardCard: "dashboard-card", CardGrid: "card-grid",
   UserSummaryCard: "user-summary-card", Stats: "stats", KpiCard: "kpi-card", StatusBadgeGroup: "status-badge-group",
   DataTable: "data-table", KeyValueTable: "key-value-table", FormBlock: "form-block", FilterBar: "filter-bar",
+  AreaChart: "area-chart", BarChart: "bar-chart", LineChart: "line-chart", DonutChart: "donut-chart", SparklineCard: "sparkline-card",
 };
 
 const COMPONENT_DEPENDENCIES: Record<string, string[]> = {
@@ -48,6 +49,26 @@ const COMPONENT_DEPENDENCIES: Record<string, string[]> = {
     "app/puck/context/is-editor-mode-context",
     "app/puck/context/layout-mode-context",
     "cn"
+  ],
+  "area-chart": [
+    "app/components/ui/badge",
+    "app/components/ui/card",
+    "app/components/ui/chart",
+    "app/puck/components/chart-utils",
+    "app/puck/components/container",
+    "app/puck/components/error-boundary",
+    "react",
+    "recharts"
+  ],
+  "bar-chart": [
+    "app/components/ui/badge",
+    "app/components/ui/card",
+    "app/components/ui/chart",
+    "app/puck/components/chart-utils",
+    "app/puck/components/container",
+    "app/puck/components/error-boundary",
+    "react",
+    "recharts"
   ],
   "bento": [
     "@puckeditor/core",
@@ -100,6 +121,16 @@ const COMPONENT_DEPENDENCIES: Record<string, string[]> = {
     "@puckeditor/core",
     "app/components/ui/separator",
     "app/puck/components/container"
+  ],
+  "donut-chart": [
+    "app/components/ui/badge",
+    "app/components/ui/card",
+    "app/components/ui/chart",
+    "app/puck/components/chart-utils",
+    "app/puck/components/container",
+    "app/puck/components/error-boundary",
+    "react",
+    "recharts"
   ],
   "filter-bar": [
     "@puckeditor/core",
@@ -161,12 +192,35 @@ const COMPONENT_DEPENDENCIES: Record<string, string[]> = {
     "cn",
     "lucide-react"
   ],
+  "line-chart": [
+    "app/components/ui/badge",
+    "app/components/ui/card",
+    "app/components/ui/chart",
+    "app/puck/components/chart-utils",
+    "app/puck/components/container",
+    "app/puck/components/error-boundary",
+    "react",
+    "recharts"
+  ],
   "page-header": [
     "@puckeditor/core",
     "app/components/ui/separator",
     "app/puck/components/badge",
     "app/puck/components/button",
     "app/puck/components/container"
+  ],
+  "sparkline-card": [
+    "app/components/ui/badge",
+    "app/components/ui/card",
+    "app/components/ui/chart",
+    "app/puck/components/badge",
+    "app/puck/components/chart-utils",
+    "app/puck/components/error-boundary",
+    "app/puck/components/icon",
+    "cn",
+    "lucide-react",
+    "react",
+    "recharts"
   ],
   "stats": [
     "@puckeditor/core",

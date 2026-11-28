@@ -38,3 +38,7 @@ upon the following open-source projects:
   Copyright (c) 2024-present GaoDesign. Licensed under the MIT License.
   See `app/export/tokenbridge/LICENSE-TOKENBRIDGE-MIT.txt` and
   `THIRD_PARTY_NOTICES.md` for the upstream commit and adaptations.
+
+- Recharts
+  https://github.com/recharts/recharts
+  Licensed under the MIT License.
