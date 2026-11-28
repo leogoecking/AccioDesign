@@ -1,4 +1,6 @@
 // Fixed catalog of reviewed presentation modules. Bundled as text in the server.
+import blockActivityTimelineSource from "../puck/config/components/activity-timeline/activity-timeline.tsx?raw";
+import blockAgendaCardSource from "../puck/config/components/agenda-card/agenda-card.tsx?raw";
 import blockAppSidebarSource from "../puck/config/components/app-sidebar/app-sidebar.tsx?raw";
 import blockAreaChartSource from "../puck/config/components/area-chart/area-chart.tsx?raw";
 import blockBarChartSource from "../puck/config/components/bar-chart/bar-chart.tsx?raw";
@@ -18,7 +20,10 @@ import blockKanbanBoardSource from "../puck/config/components/kanban-board/kanba
 import blockKeyValueTableSource from "../puck/config/components/key-value-table/key-value-table.tsx?raw";
 import blockKpiCardSource from "../puck/config/components/kpi-card/kpi-card.tsx?raw";
 import blockLineChartSource from "../puck/config/components/line-chart/line-chart.tsx?raw";
+import blockNotificationListSource from "../puck/config/components/notification-list/notification-list.tsx?raw";
 import blockPageHeaderSource from "../puck/config/components/page-header/page-header.tsx?raw";
+import blockProgressCardSource from "../puck/config/components/progress-card/progress-card.tsx?raw";
+import blockRecordListSource from "../puck/config/components/record-list/record-list.tsx?raw";
 import blockSparklineCardSource from "../puck/config/components/sparkline-card/sparkline-card.tsx?raw";
 import blockStatsSource from "../puck/config/components/stats/stats.tsx?raw";
 import blockStatusBadgeGroupSource from "../puck/config/components/status-badge-group/status-badge-group.tsx?raw";
@@ -42,6 +47,8 @@ import uiBreadcrumbSource from "../components/ui/breadcrumb.tsx?raw";
 import uiButtonSource from "../components/ui/button.tsx?raw";
 import uiCardSource from "../components/ui/card.tsx?raw";
 import uiChartSource from "../components/ui/chart.tsx?raw";
+import uiCopyButtonSource from "../components/ui/copy-button.tsx?raw";
+import uiFallbackAvatarSource from "../components/ui/fallback-avatar.tsx?raw";
 import uiInputSource from "../components/ui/input.tsx?raw";
 import uiLabelSource from "../components/ui/label.tsx?raw";
 import uiNavigationMenuSource from "../components/ui/navigation-menu.tsx?raw";
@@ -61,6 +68,8 @@ import documentSource from "./frontend/document.ts?raw";
 import runtimeSource from "./frontend/runtime.tsx?raw";
 
 export const frontendSources: Readonly<Record<string, string>> = {
+  "puck/config/components/activity-timeline/activity-timeline.tsx": blockActivityTimelineSource,
+  "puck/config/components/agenda-card/agenda-card.tsx": blockAgendaCardSource,
   "puck/config/components/app-sidebar/app-sidebar.tsx": blockAppSidebarSource,
   "puck/config/components/area-chart/area-chart.tsx": blockAreaChartSource,
   "puck/config/components/bar-chart/bar-chart.tsx": blockBarChartSource,
@@ -80,7 +89,10 @@ export const frontendSources: Readonly<Record<string, string>> = {
   "puck/config/components/key-value-table/key-value-table.tsx": blockKeyValueTableSource,
   "puck/config/components/kpi-card/kpi-card.tsx": blockKpiCardSource,
   "puck/config/components/line-chart/line-chart.tsx": blockLineChartSource,
+  "puck/config/components/notification-list/notification-list.tsx": blockNotificationListSource,
   "puck/config/components/page-header/page-header.tsx": blockPageHeaderSource,
+  "puck/config/components/progress-card/progress-card.tsx": blockProgressCardSource,
+  "puck/config/components/record-list/record-list.tsx": blockRecordListSource,
   "puck/config/components/sparkline-card/sparkline-card.tsx": blockSparklineCardSource,
   "puck/config/components/stats/stats.tsx": blockStatsSource,
   "puck/config/components/status-badge-group/status-badge-group.tsx": blockStatusBadgeGroupSource,
@@ -104,6 +116,8 @@ export const frontendSources: Readonly<Record<string, string>> = {
   "components/ui/button.tsx": uiButtonSource,
   "components/ui/card.tsx": uiCardSource,
   "components/ui/chart.tsx": uiChartSource,
+  "components/ui/copy-button.tsx": uiCopyButtonSource,
+  "components/ui/fallback-avatar.tsx": uiFallbackAvatarSource,
   "components/ui/input.tsx": uiInputSource,
   "components/ui/label.tsx": uiLabelSource,
   "components/ui/navigation-menu.tsx": uiNavigationMenuSource,

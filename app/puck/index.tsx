@@ -70,6 +70,22 @@ import SparklineCard, {
   type SparklineCardProps,
 } from "~/puck/config/components/sparkline-card";
 
+import ActivityTimeline, {
+  type ActivityTimelineProps,
+} from "~/puck/config/components/activity-timeline";
+import RecordList, {
+  type RecordListProps,
+} from "~/puck/config/components/record-list";
+import ProgressCard, {
+  type ProgressCardProps,
+} from "~/puck/config/components/progress-card";
+import AgendaCard, {
+  type AgendaCardProps,
+} from "~/puck/config/components/agenda-card";
+import NotificationList, {
+  type NotificationListProps,
+} from "~/puck/config/components/notification-list";
+
 import {
   EditorModeProvider as VisualEditorModeProvider,
   type EditorModeProviderProps,
@@ -102,6 +118,11 @@ export type Props = {
   LineChart: LineChartProps;
   DonutChart: DonutChartProps;
   SparklineCard: SparklineCardProps;
+  ActivityTimeline: ActivityTimelineProps;
+  RecordList: RecordListProps;
+  ProgressCard: ProgressCardProps;
+  AgendaCard: AgendaCardProps;
+  NotificationList: NotificationListProps;
 };
 
 export type Config = PuckConfig<Props, RootProps>;
@@ -156,6 +177,17 @@ export const config: Config = {
         "SparklineCard",
       ],
     },
+    informacoes: {
+      title: "Informações e atividades",
+      defaultExpanded: true,
+      components: [
+        "ActivityTimeline",
+        "RecordList",
+        "ProgressCard",
+        "AgendaCard",
+        "NotificationList",
+      ],
+    },
   },
   components: {
     Header,
@@ -183,6 +215,11 @@ export const config: Config = {
     LineChart,
     DonutChart,
     SparklineCard,
+    ActivityTimeline,
+    RecordList,
+    ProgressCard,
+    AgendaCard,
+    NotificationList,
   },
   root: rootConfig,
 };

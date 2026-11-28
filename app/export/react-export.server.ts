@@ -4,6 +4,7 @@ import license from "../../LICENSE?raw";
 import notice from "../../NOTICE?raw";
 import attributions from "../../THIRD_PARTY_NOTICES.md?raw";
 import shadcnLicense from "./licenses/LICENSE-SHADCN-MIT.txt?raw";
+import spellUiLicense from "./licenses/LICENSE-SPELLUI-MIT.txt?raw";
 import tokenbridgeLicense from "./tokenbridge/LICENSE-TOKENBRIDGE-MIT.txt?raw";
 import { config } from "~/puck";
 import type { LocalProject } from "~/lib/projects.server";
@@ -143,6 +144,9 @@ export function buildReactFiles(project: LocalProject, theme: AccioThemeDocument
   const registry = Array.from(views, ([name, view]) => `  ${name}: { view: ${name}, slots: ${JSON.stringify(view.slots)} },`);
   const fontImports = fontPackages.flatMap(pkg => [400, 500, 600, 700].map(weight => `import "${pkg}/${weight}.css";`));
   const json = (value: unknown) => JSON.stringify(value, null, 2) + "\n";
+  const usesSpellUi =
+    Object.hasOwn(files, "src/components/ui/fallback-avatar.tsx") ||
+    Object.hasOwn(files, "src/components/ui/copy-button.tsx");
 
   const frontend = {
     ...files,
@@ -231,6 +235,7 @@ Consulte LICENSE, NOTICE e THIRD_PARTY_NOTICES.md para atribuições. Os caminho
     "THIRD_PARTY_NOTICES.md": attributions,
     "licenses/LICENSE-TOKENBRIDGE-MIT.txt": tokenbridgeLicense,
     "licenses/LICENSE-SHADCN-MIT.txt": shadcnLicense,
+    ...(usesSpellUi ? { "licenses/LICENSE-SPELLUI-MIT.txt": spellUiLicense } : {}),
   };
   return Object.fromEntries(Object.entries(frontend).map(([file, source]) => [`frontend/${file}`, source]));
 }

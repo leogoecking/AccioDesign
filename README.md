@@ -4,12 +4,12 @@
 
 Escolha uma estrutura, experimente temas e aprove o resultado no navegador antes de implementar as funcionalidades. O AccioDesign exporta um **frontend React reutilizável e executável**, junto com o contrato visual e uma skill que orienta agentes a trabalhar sobre o código aprovado. Assim, a equipe pode evoluir a interface sem recomeçar a implementação a partir de uma captura, um protótipo ou um prompt.
 
-- **Composição visual** com Puck, três templates, uma estrutura em branco e um catálogo de 25 blocos (incluindo a categoria **Gráficos e análise** com `AreaChart`, `BarChart`, `LineChart`, `DonutChart` e `SparklineCard`).
+- **Composição visual** com Puck, três templates, uma estrutura em branco e um catálogo de 30 blocos (incluindo **Gráficos e análise** e **Informações e atividades** com `ActivityTimeline`, `RecordList`, `ProgressCard`, `AgendaCard` e `NotificationList`).
 - **Personalização em tempo real** com 43 presets, temas claro e escuro, tipografia, densidade, largura e navegação.
 - **Exportação local** com o documento, os tokens e as views React usadas na apresentação.
 - **Integração com agentes** com instruções de reutilização e verificação para Codex e Antigravity.
 
-O editor usa React, React Router e Puck. A interface usa Tailwind CSS v4, shadcn/ui e Recharts (incluído apenas quando gráficos são usados no projeto), com módulos de tema adaptados do Tweakcn e de exportação adaptados do TokenBridge.
+O editor usa React, React Router e Puck. A interface usa Tailwind CSS v4, shadcn/ui, primitivas adaptadas do Spell UI e Recharts (incluídos seletivamente apenas quando os blocos correspondentes são usados no projeto), com módulos de tema adaptados do Tweakcn e de exportação adaptados do TokenBridge.
 
 ![Galeria do AccioDesign com as três estruturas iniciais](./docs/screenshots/gallery-desktop.png)
 
@@ -226,7 +226,7 @@ O ZIP é gerado localmente do projeto salvo. Comece em `frontend/src/main.tsx` p
 
 - [Arquitetura, persistência e limitações](./docs/arquitetura.md). Catálogo de blocos, temas, layout responsivo, segurança, exportação e identidade dos slots React.
 - [Validação e regressões](./docs/validacao.md). Comandos de teste, execução independente do frontend, matriz responsiva e resultados históricos.
-- [Avisos e dependências de terceiros](./THIRD_PARTY_NOTICES.md). Origem, adaptações e licenças de Puck, puck-configs, Tweakcn, shadcn/ui e TokenBridge.
+- [Avisos e dependências de terceiros](./THIRD_PARTY_NOTICES.md). Origem, adaptações e licenças de Puck, puck-configs, Tweakcn, shadcn/ui, Spell UI, Recharts e TokenBridge.
 
 Para verificar uma alteração no repositório principal, execute `npm test`, `npm run typecheck` e `npm run build`.
 

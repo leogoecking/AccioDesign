@@ -270,7 +270,7 @@ describe("AccioDesign Fase 3 — Templates, Persistência Isolada e Compatibilid
   it("mantém compatibilidade integral entre Experimentar, Editar e Apresentar com o catálogo do Puck", () => {
     const registeredComponents = new Set(Object.keys(config.components));
     assert.equal(registeredComponents.has("KanbanBoard"), true);
-    assert.equal(registeredComponents.size, 25);
+    assert.equal(registeredComponents.size, 30);
 
     for (const template of GALLERY_TEMPLATES_META) {
       const data = instantiateTemplate(template.id);
@@ -474,7 +474,7 @@ describe("Fase 4 — contrato visual", () => {
 });
 
 describe("Fase 5 — frontend React exportado", () => {
-  it("inclui as 25 views e dependências permitidas sem incorporar o editor", async () => {
+  it("inclui as 30 views e dependências permitidas sem incorporar o editor", async () => {
     const { buildDesignFiles } = await import("../app/export/design-export.server");
     const blank = instantiateTemplate("em-branco");
     const data = {
@@ -752,6 +752,104 @@ describe("Fase 8.1 — Gráficos e análise de dados", () => {
       assert.match(files["components.md"], new RegExp(type));
 
       for (const [otherType, otherSlug] of chartTypes) {
+        if (otherType !== type) {
+          assert.equal(
+            `frontend/src/puck/config/components/${otherSlug}/${otherSlug}.tsx` in files,
+            false,
+            `${type} não deve exportar ${otherSlug}`
+          );
+        }
+      }
+
+      assert.deepStrictEqual(await buildDesignZip(project), await buildDesignZip(project));
+    }
+  });
+});
+
+describe("Fase 8.2 — Informações e atividades", () => {
+  it("registra os cinco blocos na categoria Informações e atividades preservando os 25 anteriores", () => {
+    const category = config.categories?.informacoes;
+    assert.ok(category);
+    assert.equal(category.title, "Informações e atividades");
+    assert.deepEqual(category.components, [
+      "ActivityTimeline",
+      "RecordList",
+      "ProgressCard",
+      "AgendaCard",
+      "NotificationList",
+    ]);
+
+    assert.equal(Object.keys(config.components).length, 30);
+    for (const name of category.components!) {
+      assert.ok(config.components[name as keyof typeof config.components], name);
+    }
+  });
+
+  it("inclui primitivas Spell UI e licença MIT apenas quando utilizadas, sem recharts ou Puck", async () => {
+    const { buildDesignFiles, buildDesignZip } = await import("../app/export/design-export.server");
+    const blocks = [
+      ["ActivityTimeline", "activity-timeline", false, false],
+      ["RecordList", "record-list", true, true],
+      ["ProgressCard", "progress-card", false, false],
+      ["AgendaCard", "agenda-card", false, false],
+      ["NotificationList", "notification-list", true, false],
+    ] as const;
+
+    for (const template of ALL_TEMPLATES_META) {
+      const data = instantiateTemplate(template.id);
+      const files = buildDesignFiles({
+        id: `proj-spell-check-${template.id}`,
+        name: template.name,
+        templateId: template.id,
+        createdAt: "",
+        updatedAt: "",
+        data,
+      });
+      assert.equal("frontend/src/components/ui/fallback-avatar.tsx" in files, false);
+      assert.equal("frontend/src/components/ui/copy-button.tsx" in files, false);
+      assert.equal("frontend/licenses/LICENSE-SPELLUI-MIT.txt" in files, false);
+    }
+
+    for (const [type, slug, usesAvatar, usesCopy] of blocks) {
+      const entry = config.components[type];
+      const base = instantiateTemplate("em-branco", `Teste ${type}`);
+      base.content = [
+        { type, props: { ...entry.defaultProps, id: `${type}-solo` } },
+      ] as typeof base.content;
+
+      const project = {
+        id: `proj-${slug}`,
+        name: `Teste ${type}`,
+        templateId: "em-branco",
+        createdAt: "",
+        updatedAt: "",
+        data: base,
+      };
+      const files = buildDesignFiles(project);
+      const pkg = JSON.parse(files["frontend/package.json"]);
+
+      assert.equal("recharts" in pkg.dependencies, false, `${type} não deve incluir recharts`);
+      assert.equal("@puckeditor/core" in pkg.dependencies, false);
+      assert.ok(files[`frontend/src/puck/config/components/${slug}/${slug}.tsx`]);
+      assert.match(files["components.md"], new RegExp(type));
+
+      assert.equal(
+        "frontend/src/components/ui/fallback-avatar.tsx" in files,
+        usesAvatar,
+        `${type} fallback-avatar.tsx`
+      );
+      assert.equal(
+        "frontend/src/components/ui/copy-button.tsx" in files,
+        usesCopy,
+        `${type} copy-button.tsx`
+      );
+      assert.equal(
+        "frontend/licenses/LICENSE-SPELLUI-MIT.txt" in files,
+        usesAvatar || usesCopy,
+        `${type} LICENSE-SPELLUI-MIT.txt`
+      );
+
+      for (const [otherType, otherSlug] of blocks) {
         if (otherType !== type) {
           assert.equal(
             `frontend/src/puck/config/components/${otherSlug}/${otherSlug}.tsx` in files,

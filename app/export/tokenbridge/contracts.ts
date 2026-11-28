@@ -35,9 +35,27 @@ const COMPONENT_PATHS: Record<string, string> = {
   UserSummaryCard: "user-summary-card", Stats: "stats", KpiCard: "kpi-card", StatusBadgeGroup: "status-badge-group",
   DataTable: "data-table", KeyValueTable: "key-value-table", FormBlock: "form-block", FilterBar: "filter-bar",
   AreaChart: "area-chart", BarChart: "bar-chart", LineChart: "line-chart", DonutChart: "donut-chart", SparklineCard: "sparkline-card",
+  ActivityTimeline: "activity-timeline", RecordList: "record-list", ProgressCard: "progress-card", AgendaCard: "agenda-card", NotificationList: "notification-list",
 };
 
 const COMPONENT_DEPENDENCIES: Record<string, string[]> = {
+  "activity-timeline": [
+    "app/components/ui/badge",
+    "app/components/ui/card",
+    "app/puck/components/container",
+    "app/puck/components/error-boundary",
+    "app/puck/components/icon",
+    "cn",
+    "react"
+  ],
+  "agenda-card": [
+    "app/components/ui/badge",
+    "app/components/ui/card",
+    "app/puck/components/container",
+    "app/puck/components/error-boundary",
+    "app/puck/components/icon",
+    "cn"
+  ],
   "app-sidebar": [
     "@puckeditor/core",
     "app/components/ui/avatar",
@@ -202,12 +220,46 @@ const COMPONENT_DEPENDENCIES: Record<string, string[]> = {
     "react",
     "recharts"
   ],
+  "notification-list": [
+    "app/components/ui/badge",
+    "app/components/ui/card",
+    "app/components/ui/fallback-avatar",
+    "app/components/ui/separator",
+    "app/puck/components/container",
+    "app/puck/components/error-boundary",
+    "app/puck/components/icon",
+    "cn",
+    "lucide-react",
+    "react"
+  ],
   "page-header": [
     "@puckeditor/core",
     "app/components/ui/separator",
     "app/puck/components/badge",
     "app/puck/components/button",
     "app/puck/components/container"
+  ],
+  "progress-card": [
+    "app/components/ui/badge",
+    "app/components/ui/card",
+    "app/puck/components/container",
+    "app/puck/components/error-boundary",
+    "cn"
+  ],
+  "record-list": [
+    "app/components/ui/badge",
+    "app/components/ui/card",
+    "app/components/ui/copy-button",
+    "app/components/ui/fallback-avatar",
+    "app/components/ui/separator",
+    "app/puck/components/badge",
+    "app/puck/components/button",
+    "app/puck/components/container",
+    "app/puck/components/error-boundary",
+    "app/puck/components/icon",
+    "app/puck/context/is-editor-mode-context",
+    "cn",
+    "react"
   ],
   "sparkline-card": [
     "app/components/ui/badge",
