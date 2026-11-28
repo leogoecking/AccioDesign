@@ -270,7 +270,7 @@ describe("AccioDesign Fase 3 — Templates, Persistência Isolada e Compatibilid
   it("mantém compatibilidade integral entre Experimentar, Editar e Apresentar com o catálogo do Puck", () => {
     const registeredComponents = new Set(Object.keys(config.components));
     assert.equal(registeredComponents.has("KanbanBoard"), true);
-    assert.equal(registeredComponents.size, 20);
+    assert.equal(registeredComponents.size, 25);
 
     for (const template of GALLERY_TEMPLATES_META) {
       const data = instantiateTemplate(template.id);
@@ -474,7 +474,7 @@ describe("Fase 4 — contrato visual", () => {
 });
 
 describe("Fase 5 — frontend React exportado", () => {
-  it("inclui as 20 views e dependências permitidas sem incorporar o editor", async () => {
+  it("inclui as 25 views e dependências permitidas sem incorporar o editor", async () => {
     const { buildDesignFiles } = await import("../app/export/design-export.server");
     const blank = instantiateTemplate("em-branco");
     const data = {
@@ -658,5 +658,110 @@ describe("Fase 6 — Agent Skill", () => {
       }
       assert.equal(instructions[0], instructions[1]);
     });
+  });
+});
+
+describe("Fase 8.1 — Gráficos e análise de dados", () => {
+  it("registra os cinco blocos na categoria Gráficos e análise e valida utilitários", async () => {
+    const {
+      buildUniqueChartInstanceId,
+      computeSafeNumericDomain,
+      formatChartAxisTick,
+      formatChartValue,
+      resolveChartColor,
+      toSafeNumber,
+    } = await import("../app/puck/components/chart-utils");
+
+    const category = config.categories?.graficos;
+    assert.ok(category);
+    assert.equal(category.title, "Gráficos e análise");
+    assert.deepEqual(category.components, [
+      "AreaChart",
+      "BarChart",
+      "LineChart",
+      "DonutChart",
+      "SparklineCard",
+    ]);
+
+    for (const name of category.components!) {
+      assert.ok(config.components[name as keyof typeof config.components], name);
+    }
+
+    assert.equal(toSafeNumber(0), 0);
+    assert.equal(toSafeNumber("0"), 0);
+    assert.equal(toSafeNumber(""), null);
+    assert.equal(toSafeNumber(NaN), null);
+    assert.match(formatChartValue(1250, "currency"), /R\$\s*1\.250/);
+    assert.equal(formatChartValue(14.5, "percent"), "14,5%");
+    assert.equal(formatChartAxisTick(0, "number"), "0");
+    assert.equal(resolveChartColor("chart-2", 0), "var(--chart-2)");
+    assert.deepEqual(computeSafeNumericDomain([0, 0, 0]), [0, 1]);
+    assert.equal(computeSafeNumericDomain([0, 10]), undefined);
+    assert.equal(buildUniqueChartInstanceId("«R1a»:", "area"), "area-R1a");
+  });
+
+  it("inclui Recharts somente nos projetos que usam gráficos e mantém exportação determinística", async () => {
+    const { buildDesignFiles, buildDesignZip } = await import("../app/export/design-export.server");
+    const chartTypes = [
+      ["AreaChart", "area-chart"],
+      ["BarChart", "bar-chart"],
+      ["LineChart", "line-chart"],
+      ["DonutChart", "donut-chart"],
+      ["SparklineCard", "sparkline-card"],
+    ] as const;
+
+    for (const template of ALL_TEMPLATES_META) {
+      const data = instantiateTemplate(template.id);
+      const files = buildDesignFiles({
+        id: `proj-${template.id}`,
+        name: template.name,
+        templateId: template.id,
+        createdAt: "",
+        updatedAt: "",
+        data,
+      });
+      const pkg = JSON.parse(files["frontend/package.json"]);
+      assert.equal("recharts" in pkg.dependencies, false, `${template.id} não deve incluir recharts`);
+      assert.equal("frontend/src/components/ui/chart.tsx" in files, false);
+      assert.equal("frontend/src/puck/components/chart-utils.ts" in files, false);
+    }
+
+    for (const [type, slug] of chartTypes) {
+      const entry = config.components[type];
+      const base = instantiateTemplate("em-branco", `Teste ${type}`);
+      base.content = [
+        { type, props: { ...entry.defaultProps, id: `${type}-solo` } },
+      ] as typeof base.content;
+
+      const project = {
+        id: `proj-${slug}`,
+        name: `Teste ${type}`,
+        templateId: "em-branco",
+        createdAt: "",
+        updatedAt: "",
+        data: base,
+      };
+      const files = buildDesignFiles(project);
+      const pkg = JSON.parse(files["frontend/package.json"]);
+
+      assert.ok(pkg.dependencies.recharts, `${type} deve incluir recharts`);
+      assert.ok(!("@puckeditor/core" in pkg.dependencies));
+      assert.ok(files["frontend/src/components/ui/chart.tsx"]);
+      assert.ok(files["frontend/src/puck/components/chart-utils.ts"]);
+      assert.ok(files[`frontend/src/puck/config/components/${slug}/${slug}.tsx`]);
+      assert.match(files["components.md"], new RegExp(type));
+
+      for (const [otherType, otherSlug] of chartTypes) {
+        if (otherType !== type) {
+          assert.equal(
+            `frontend/src/puck/config/components/${otherSlug}/${otherSlug}.tsx` in files,
+            false,
+            `${type} não deve exportar ${otherSlug}`
+          );
+        }
+      }
+
+      assert.deepStrictEqual(await buildDesignZip(project), await buildDesignZip(project));
+    }
   });
 });

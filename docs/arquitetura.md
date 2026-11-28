@@ -4,7 +4,7 @@
 
 ## Aplicação local
 
-O AccioDesign usa React 19, React Router 7 em modo framework com SSR, TypeScript 5.8 e Vite 6. A interface usa Tailwind CSS v4, shadcn/ui (radix-rhea), Radix UI e Lucide. O editor usa Puck 0.24 e os temas vêm de módulos adaptados do Tweakcn. Os módulos de origem e suas licenças estão nos [avisos de terceiros](../THIRD_PARTY_NOTICES.md).
+O AccioDesign usa React 19, React Router 7 em modo framework com SSR, TypeScript 5.8 e Vite 6. A interface usa Tailwind CSS v4, shadcn/ui (radix-rhea), Radix UI, Recharts 3 e Lucide. O editor usa Puck 0.24 e os temas vêm de módulos adaptados do Tweakcn. Os módulos de origem e suas licenças estão nos [avisos de terceiros](../THIRD_PARTY_NOTICES.md).
 
 | Área | Entrada |
 | --- | --- |
@@ -28,6 +28,7 @@ As rotas legadas de edição e apresentação continuam disponíveis. O preview 
 | Indicadores | `Stats`, `KpiCard`, `StatusBadgeGroup` |
 | Tabelas | `DataTable` com busca local, `KeyValueTable` |
 | Formulários | `FormBlock`, `FilterBar` |
+| Gráficos e análise | `AreaChart`, `BarChart`, `LineChart`, `DonutChart`, `SparklineCard` |
 
 O documento Puck guarda tema, modo de navegação, densidade e largura em `root.props`. Alterar uma dessas propriedades mantém os blocos, seus slots e seus dados. O modo Experimentar oferece 43 identidades visuais, Claro/Escuro, tipografia, densidade, cantos e navegação. Edição de cores e sombras individuais e importação/exportação de tema CSS/JSON ficam na aba **Tema** em Editar. Os controles de navegação aparecem quando há um bloco `AppSidebar` compatível com os modos Sidebar, Rail compacto ou Topo.
 
@@ -57,7 +58,7 @@ O exportador adapta o formato TokenBridge para preservar os tokens efetivos de L
 
 O `theme.css` exportado incorpora regras visuais compartilhadas, tipografia e bindings de tokens. Se você integrar o CSS em outra stack Vite/Tailwind, mantenha Tailwind CSS v4, `tw-animate-css`, `shadcn/tailwind.css` e `@fontsource-variable/inter` disponíveis. O README do frontend indica as fontes fornecidas por dependências Fontsource e as famílias adicionais que o destino precisa disponibilizar. URLs de fontes, imagens e links do documento podem continuar externas. Para alternar o tema no destino, mantenha alinhados a classe `.dark`, o `color-scheme` e o modo passado a `DesignView`. O modo salvo consta no manifesto.
 
-O exportador percorre os slots declarados e inclui apenas as views usadas, inclusive as aninhadas, mais as dependências autorizadas. Os 20 blocos do catálogo são suportados. Tipos de bloco desconhecidos ou slots malformados interrompem a exportação. Zonas legadas sem consumidor no catálogo ficam preservadas no JSON. O inventário descreve dependências diretas conhecidas e pode citar caminhos do repositório original.
+O exportador percorre os slots declarados e inclui apenas as views usadas, inclusive as aninhadas, mais as dependências autorizadas. Os 25 blocos do catálogo são suportados. Projetos que não utilizam blocos de **Gráficos e análise** não recebem `recharts`, `components/ui/chart.tsx` nem `puck/components/chart-utils.ts` no frontend exportado. Tipos de bloco desconhecidos ou slots malformados interrompem a exportação. Zonas legadas sem consumidor no catálogo ficam preservadas no JSON. O inventário descreve dependências diretas conhecidas e pode citar caminhos do repositório original.
 
 O frontend usa as mesmas views da apresentação e executa separadamente do servidor do AccioDesign e do Puck. O ponto de entrada `frontend/src/main.tsx` registra as views. Conecte dados reais por props, callbacks ou adaptadores e trate os dados de `frontend/src/design.json` como demonstração. Integrações com APIs e regras de negócio pertencem ao projeto de destino. Mantenha os [avisos e licenças das views reutilizadas](../THIRD_PARTY_NOTICES.md#2-puck--puck-configs-shadcn-twblocks).
 

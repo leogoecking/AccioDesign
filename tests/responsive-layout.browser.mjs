@@ -158,7 +158,7 @@ async function checkRoute(project, name, url, measurements) {
       result.verticalScroll = scroll;
     }
     if (project.template === "catalogo" && name === "Editar") {
-      assert.equal(new Set(result.blocks.filter(id => id.startsWith("catalog-"))).size, 20, at);
+      assert.equal(new Set(result.blocks.filter(id => id.startsWith("catalog-"))).size, 25, at);
     }
     if (project.template === "catalogo" && (name === "Apresentar" || name === "Exportado")) {
       if (width === 390) {

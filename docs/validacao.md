@@ -55,7 +55,7 @@ node tests/responsive-layout.browser.mjs <diretório-impresso>
 bash tests/responsive-width-controls.browser.sh
 ```
 
-A matriz inclui os três templates, a estrutura em branco, uma composição com os 20 blocos e dois documentos com shell curto em modo Fluido e legado. Cada cenário usa uma combinação de largura, navegação, densidade e tema em Experimentar, Editar, Apresentar e no frontend exportado. O script redimensiona a janela, mede largura, altura e overflow, e verifica a identidade do nó de layout. A regressão do shell longo rola até o último formulário. O relatório `responsividade.json` fica ao lado dos sete pacotes extraídos, dentro de `TMPDIR` ou do diretório temporário do sistema. O último comando verifica a persistência da largura ao alternar entre os modos.
+A matriz inclui os três templates, a estrutura em branco, uma composição com os 25 blocos e dois documentos com shell curto em modo Fluido e legado. Cada cenário usa uma combinação de largura, navegação, densidade e tema em Experimentar, Editar, Apresentar e no frontend exportado. O script redimensiona a janela, mede largura, altura e overflow, e verifica a identidade do nó de layout. A regressão do shell longo rola até o último formulário. O relatório `responsividade.json` fica ao lado dos sete pacotes extraídos, dentro de `TMPDIR` ou do diretório temporário do sistema. O último comando verifica a persistência da largura ao alternar entre os modos.
 
 Na validação da responsividade global, as 168 verificações passaram em 390×844, 768×1024, 1366×768, 1920×1080, 2560×1440 e 3440×1440. O shell curto ocupou a altura disponível em modo Fluido, o longo permitiu rolar até o formulário e a página permaneceu sem overflow horizontal. A grade passou de uma para quatro colunas e a tabela rolou na própria região. Dos 21 pares comparados, 15 coincidiram, com diferença normalizada máxima de 0,016%.
 
@@ -72,3 +72,18 @@ A instalação local a partir da pasta portátil e a remoção no escopo do proj
 Dois downloads do mesmo projeto no build de produção foram idênticos. Após a extração, os cinco arquivos da skill correspondiam à fonte canônica, com referências válidas na entrada portátil e na entrada legada. O teste de navegador confirmou o download e a ausência de `.agents`. Os três templates e a estrutura em branco passaram por instalação, typecheck, build e execução independente. Na comparação em Chromium, seis dos 12 pares de capturas coincidiram, com diferença normalizada máxima de 0,019%. O filtro da tabela administrativa também foi exercitado.
 
 As três imagens do README foram capturadas na aplicação atual com dados demonstrativos. Os links internos foram conferidos, incluindo as âncoras da documentação e da skill. Os dois diagramas foram renderizados pelo Mermaid CLI.
+
+## Gráficos e análise de dados (Fase 8.1)
+
+```bash
+npm test
+node tests/analytics-blocks.browser.mjs
+```
+
+A suíte `Fase 8.1` em [tests/phase3.test.ts](../tests/phase3.test.ts) valida o registro da categoria **Gráficos e análise** (5 novos blocos, totalizando 25 no catálogo), os utilitários de formatação `pt-BR` e sanitização de IDs SVG em [chart-utils.ts](../app/puck/components/chart-utils.ts), o isolamento seletivo de dependências no exportador (projetos sem gráficos não incluem `recharts`, `chart.tsx` nem `chart-utils.ts`) e o determinismo do ZIP em cada bloco individual.
+
+O script [tests/analytics-blocks.browser.mjs](../tests/analytics-blocks.browser.mjs) executa no Chromium headless via CDP contra o servidor de produção (`react-router-serve`) e o frontend React extraído de forma independente (`npm install`, `typecheck`, `build` e `vite preview`):
+
+- Validação de estados vazios (`data: []`), séries zeradas (`0`), múltiplas instâncias simultâneas (`AreaChart` e `SparklineCard`) e ausência de colisão de IDs internos de SVG (`defs [id]` e `[data-chart]`).
+- Validação em **Experimentar** (Claro/Escuro com troca de presets e densidade no iframe), **Editar** (categoria `Gráficos e análise` no Puck), **Apresentar** (Desktop `1440x900` e Mobile `390x844` sem overflow) e **frontend exportado** (renderização com 6 superfícies `svg.recharts-surface` ativas, 0 erros de console/página, 0 warnings `width(-1)` e paridade visual/DOM idêntica entre Apresentar e o pacote exportado).
+- Capturas registradas em [docs/screenshots/](../docs/screenshots/): `analytics-composition-light.png`, `analytics-composition-dark.png`, `analytics-exported-frontend.png` e `analytics-mobile.png`.
