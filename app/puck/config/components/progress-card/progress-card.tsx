@@ -88,6 +88,75 @@ function formatGoalValue(
   return cleanUnit ? `${formatted} ${cleanUnit}` : formatted;
 }
 
+export interface ResolvedProgressMetrics {
+  current: number;
+  target: number;
+  hasTarget: boolean;
+  isExceeded: boolean;
+  rawPct: number | null;
+  fillPct: number;
+  ariaValueMin: number;
+  ariaValueMax: number;
+  ariaValueNow: number;
+  ariaValueText: string | undefined;
+  formattedCurrent: string;
+  formattedTarget: string;
+}
+
+export function resolveProgressMetrics(
+  item: ProgressGoalItem
+): ResolvedProgressMetrics {
+  const current =
+    typeof item.current === "number" && Number.isFinite(item.current)
+      ? Math.max(0, item.current)
+      : 0;
+  const target =
+    typeof item.target === "number" && Number.isFinite(item.target)
+      ? Math.max(0, item.target)
+      : 0;
+  const hasTarget = target > 0;
+  const isExceeded = hasTarget && current > target;
+  const formattedCurrent = formatGoalValue(current, item.format, item.unit);
+  const formattedTarget = formatGoalValue(target, item.format, item.unit);
+
+  if (!hasTarget) {
+    return {
+      current,
+      target,
+      hasTarget: false,
+      isExceeded: false,
+      rawPct: null,
+      fillPct: 0,
+      ariaValueMin: 0,
+      ariaValueMax: 100,
+      ariaValueNow: 0,
+      ariaValueText: `Meta não definida (valor atual: ${formattedCurrent})`,
+      formattedCurrent,
+      formattedTarget,
+    };
+  }
+
+  const rawPct = Math.round((current / target) * 100);
+  const fillPct = Math.min(100, Math.max(0, (current / target) * 100));
+
+  return {
+    current,
+    target,
+    hasTarget: true,
+    isExceeded,
+    rawPct,
+    fillPct,
+    ariaValueMin: 0,
+    ariaValueMax: target,
+    ariaValueNow: Math.min(current, target),
+    ariaValueText: isExceeded
+      ? `${rawPct}% (${formattedCurrent} de ${formattedTarget}, meta ultrapassada)`
+      : undefined,
+    formattedCurrent,
+    formattedTarget,
+  };
+}
+
 export const ProgressCard = ({
   title,
   description,
@@ -136,17 +205,13 @@ export const ProgressCard = ({
                 className="flex flex-col gap-4"
               >
                 {safeItems.map((item, index) => {
-                  const current =
-                    typeof item.current === "number" && Number.isFinite(item.current)
-                      ? Math.max(0, item.current)
-                      : 0;
-                  const target =
-                    typeof item.target === "number" && Number.isFinite(item.target)
-                      ? Math.max(0, item.target)
-                      : 0;
-                  const rawPct = target > 0 ? Math.round((current / target) * 100) : 0;
-                  const fillPct = target > 0 ? Math.min(100, Math.max(0, (current / target) * 100)) : 0;
+                  const metrics = resolveProgressMetrics(item);
                   const tone = item.tone && VALID_TONES.has(item.tone) ? item.tone : "primary";
+                  const goalState = !metrics.hasTarget
+                    ? "no-target"
+                    : metrics.isExceeded
+                      ? "exceeded"
+                      : "normal";
 
                   return (
                     <div key={`${item.label}-${index}`} className="min-w-0 space-y-1.5">
@@ -157,14 +222,23 @@ export const ProgressCard = ({
                         <div className="flex shrink-0 items-baseline gap-2 text-xs tabular-nums">
                           {showValues ? (
                             <span className="text-muted-foreground">
-                              {formatGoalValue(current, item.format, item.unit)} de{" "}
-                              {formatGoalValue(target, item.format, item.unit)}
+                              {metrics.hasTarget
+                                ? `${metrics.formattedCurrent} de ${metrics.formattedTarget}`
+                                : showPercentage
+                                  ? metrics.formattedCurrent
+                                  : `${metrics.formattedCurrent} · sem meta`}
                             </span>
                           ) : null}
                           {showPercentage ? (
-                            <span className="font-semibold text-foreground">
-                              {rawPct}%
-                            </span>
+                            metrics.hasTarget ? (
+                              <span className="font-semibold text-foreground">
+                                {metrics.rawPct}%
+                              </span>
+                            ) : (
+                              <span className="font-medium text-muted-foreground">
+                                Sem meta
+                              </span>
+                            )
                           ) : null}
                         </div>
                       </div>
@@ -172,9 +246,11 @@ export const ProgressCard = ({
                       <div
                         role="progressbar"
                         aria-label={item.label}
-                        aria-valuenow={current}
-                        aria-valuemin={0}
-                        aria-valuemax={target > 0 ? target : 100}
+                        aria-valuenow={metrics.ariaValueNow}
+                        aria-valuemin={metrics.ariaValueMin}
+                        aria-valuemax={metrics.ariaValueMax}
+                        aria-valuetext={metrics.ariaValueText}
+                        data-goal-state={goalState}
                         className={cn(
                           "w-full overflow-hidden rounded-full bg-muted",
                           barSize === "sm" ? "h-1.5" : "h-2.5"
@@ -182,7 +258,7 @@ export const ProgressCard = ({
                       >
                         <div
                           style={{
-                            width: `${fillPct}%`,
+                            width: `${metrics.fillPct}%`,
                             backgroundColor: `var(--${tone})`,
                           }}
                           className="h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none"

@@ -105,6 +105,26 @@ class CdpClient {
     return res.result?.value;
   }
 
+  async pressEnter() {
+    await this.send("Page.bringToFront");
+    await this.send("Input.dispatchKeyEvent", {
+      type: "keyDown",
+      key: "Enter",
+      code: "Enter",
+      text: "\r",
+      unmodifiedText: "\r",
+      windowsVirtualKeyCode: 13,
+      nativeVirtualKeyCode: 13,
+    });
+    await this.send("Input.dispatchKeyEvent", {
+      type: "keyUp",
+      key: "Enter",
+      code: "Enter",
+      windowsVirtualKeyCode: 13,
+      nativeVirtualKeyCode: 13,
+    });
+  }
+
   async waitFor(predicateExpr, timeoutMs = 15000, label = "condition") {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
@@ -605,6 +625,41 @@ async function main() {
         },
       },
       {
+        type: "ProgressCard",
+        props: {
+          id: "pc-edge-goals",
+          title: "Metas Extremas",
+          showPercentage: true,
+          showValues: true,
+          items: [
+            {
+              label: "Meta comercial superada",
+              current: 140,
+              target: 100,
+              format: "number",
+              unit: "vendas",
+              tone: "chart-1",
+            },
+            {
+              label: "Fila sem meta definida",
+              current: 18,
+              target: 0,
+              format: "number",
+              unit: "itens",
+              tone: "chart-2",
+            },
+            {
+              label: "Indicador zerado sem alvo",
+              current: 0,
+              target: 0,
+              format: "number",
+              unit: "",
+              tone: "primary",
+            },
+          ],
+        },
+      },
+      {
         type: "AgendaCard",
         props: {
           id: "ac-empty",
@@ -629,10 +684,56 @@ async function main() {
       `document.body.innerText.includes('Sem eventos históricos no momento.')
         && document.body.innerText.includes('Nenhuma meta definida ainda.')
         && document.body.innerText.includes('Nenhum compromisso na agenda.')
-        && document.body.innerText.includes('Caixa de notificações limpa.')`,
+        && document.body.innerText.includes('Caixa de notificações limpa.')
+        && document.body.innerText.includes('Metas Extremas')`,
       10000,
       "Empty states rendered"
     );
+
+    const progressEdgeCheck = await client.eval(`(() => {
+      const region = document.querySelector('[role="region"][aria-label="Metas Extremas"]');
+      const bars = Array.from(region.querySelectorAll('[role="progressbar"]')).map((bar) => {
+        const container = bar.parentElement;
+        const fill = bar.firstElementChild;
+        return {
+          label: bar.getAttribute('aria-label'),
+          valuenow: Number(bar.getAttribute('aria-valuenow')),
+          valuemin: Number(bar.getAttribute('aria-valuemin')),
+          valuemax: Number(bar.getAttribute('aria-valuemax')),
+          valuetext: bar.getAttribute('aria-valuetext'),
+          goalState: bar.getAttribute('data-goal-state'),
+          fillWidth: fill?.style?.width || '',
+          rowText: container?.innerText || '',
+        };
+      });
+      return bars;
+    })()`);
+    assert.equal(progressEdgeCheck.length, 3);
+    for (const bar of progressEdgeCheck) {
+      assert.ok(
+        bar.valuemin <= bar.valuenow && bar.valuenow <= bar.valuemax,
+        `ARIA out of bounds on ${bar.label}: ${bar.valuenow} not in [${bar.valuemin}, ${bar.valuemax}]`
+      );
+    }
+    const exceededBar = progressEdgeCheck.find((b) => b.label === "Meta comercial superada");
+    assert.equal(exceededBar.valuenow, 100);
+    assert.equal(exceededBar.valuemax, 100);
+    assert.equal(exceededBar.goalState, "exceeded");
+    assert.equal(exceededBar.fillWidth, "100%");
+    assert.match(exceededBar.valuetext ?? "", /140%.*meta ultrapassada/);
+    assert.match(exceededBar.rowText, /140%/);
+
+    for (const zeroLabel of ["Fila sem meta definida", "Indicador zerado sem alvo"]) {
+      const zeroBar = progressEdgeCheck.find((b) => b.label === zeroLabel);
+      assert.equal(zeroBar.valuenow, 0);
+      assert.equal(zeroBar.valuemin, 0);
+      assert.equal(zeroBar.valuemax, 100);
+      assert.equal(zeroBar.goalState, "no-target");
+      assert.match(zeroBar.valuetext ?? "", /Meta não definida/);
+      assert.match(zeroBar.rowText, /Sem meta/);
+      assert.equal(zeroBar.rowText.includes("%"), false, `Zero-target goal ${zeroLabel} must not show %`);
+    }
+    console.log("✔ ProgressCard exceeded and zero-target ARIA/visual bounds verified");
 
     // Test CopyButton error state explicitly when clipboard fails, then success state
     const copyErrorStatus = await client.eval(`(async () => {
@@ -781,12 +882,54 @@ async function main() {
     assert.ok(presentMetrics.overflow <= 0, `Present overflow: ${presentMetrics.overflow}`);
     await client.screenshot("information-composition-light.png", true);
 
-    // Test NotificationList toggle & mark all on Apresentar
-    await client.eval(`document.querySelector('[data-slot="toggle-read"]').click()`);
-    await client.waitFor(`document.body.innerText.includes('1 não lida')`, 3000, "Notification toggled");
-    await client.eval(`document.querySelector('[data-slot="mark-all-read"]').click()`);
-    await client.waitFor(`document.body.innerText.includes('0 não lidas')`, 3000, "All notifications marked read");
-    console.log("✔ Present mode + NotificationList read interactions verified");
+    // Test NotificationList stable groups, keyboard focus preservation & mark-all on Apresentar
+    await client.eval(`(() => {
+      window.__unreadSection = document.querySelector('[data-section="unread"]');
+      window.__readSection = document.querySelector('[data-section="read"]');
+      document.querySelector('[data-slot="toggle-read"][data-notification-key="notif-1"]').focus();
+    })()`);
+    await client.pressEnter();
+    await client.waitFor(
+      `document.body.innerText.includes('1 não lida')
+        && Boolean(document.querySelector('[data-section="read"] [data-notification-key="notif-1"]'))`,
+      3000,
+      "Notification toggled to read via Enter"
+    );
+    const focusAfterRead = await client.eval(`({
+      key: document.activeElement?.dataset?.notificationKey,
+      slot: document.activeElement?.dataset?.slot,
+      unreadStable: window.__unreadSection === document.querySelector('[data-section="unread"]'),
+      readStable: window.__readSection === document.querySelector('[data-section="read"]'),
+    })`);
+    assert.deepEqual(focusAfterRead, {
+      key: "notif-1",
+      slot: "toggle-read",
+      unreadStable: true,
+      readStable: true,
+    });
+
+    await client.pressEnter();
+    await client.waitFor(
+      `document.body.innerText.includes('2 não lidas')
+        && Boolean(document.querySelector('[data-section="unread"] [data-notification-key="notif-1"]'))`,
+      3000,
+      "Notification toggled back to unread via Enter"
+    );
+    const focusAfterUnread = await client.eval(
+      `document.activeElement?.dataset?.notificationKey`
+    );
+    assert.equal(focusAfterUnread, "notif-1", "Focus must remain on notif-1 when moving back to unread");
+
+    await client.eval(`document.querySelector('[data-slot="mark-all-read"]').focus()`);
+    await client.pressEnter();
+    await client.waitFor(`document.body.innerText.includes('0 não lidas')`, 3000, "All notifications marked read via Enter");
+    const focusInsideRegion = await client.eval(`Boolean(
+      document.activeElement &&
+      document.activeElement !== document.body &&
+      document.querySelector('[role="region"][aria-label="Central de Notificações"]')?.contains(document.activeElement)
+    )`);
+    assert.equal(focusInsideRegion, true, "Focus must stay inside NotificationList region after Marcar todas");
+    console.log("✔ Present mode + NotificationList focus stability & read interactions verified");
 
     // Mobile 390x844 screenshot
     await client.goto(`${BASE_URL}/projects/${comp.id}`);
@@ -883,6 +1026,164 @@ async function main() {
       console.log("✔ Visual parity metrics between Apresentar and Exported Frontend match 100%");
     } finally {
       previewServer.kill("SIGTERM");
+    }
+
+    // 4. Verify external updates vs equivalent-array reference stability on exported NotificationList
+    const harnessSource = `import { useState } from "react";
+import { createRoot } from "react-dom/client";
+import { NotificationList, type NotificationItem } from "~/puck/config/components/notification-list/notification-list";
+import "./theme.css";
+
+const initialItems: NotificationItem[] = [
+  { id: "n1", title: "Alerta crítico", timestamp: "Há 2 min", read: false, priority: "alta" },
+  { id: "n2", title: "Contrato pendente", timestamp: "Há 10 min", read: false, priority: "normal" },
+  { id: "n3", title: "Lote conciliado", timestamp: "Há 1 hora", read: true, priority: "baixa" },
+];
+
+declare global {
+  interface Window {
+    __notifApi?: {
+      rerenderEquivalent: () => void;
+      markSecondExternally: () => void;
+      markFirstReadExternally: () => void;
+      reopenFirstAndAddFourth: () => void;
+    };
+    __notifEvents?: { toggled: Array<[string, boolean]>; markedAllCount: number };
+  }
+}
+
+window.__notifEvents = { toggled: [], markedAllCount: 0 };
+
+function Harness() {
+  const [items, setItems] = useState<NotificationItem[]>(() => structuredClone(initialItems));
+  window.__notifApi = {
+    rerenderEquivalent: () => setItems((curr) => structuredClone(curr)),
+    markSecondExternally: () =>
+      setItems((curr) => curr.map((item) => (item.id === "n2" ? { ...item, read: true } : { ...item }))),
+    markFirstReadExternally: () =>
+      setItems([
+        { ...initialItems[0], read: true },
+        { ...initialItems[1], read: true },
+        { ...initialItems[2], read: true },
+      ]),
+    reopenFirstAndAddFourth: () =>
+      setItems([
+        { ...initialItems[0], read: false },
+        { ...initialItems[1], read: true },
+        { ...initialItems[2], read: true },
+        { id: "n4", title: "Novo alerta externo", timestamp: "Agora", read: false, priority: "normal" },
+      ]),
+  };
+
+  return (
+    <div data-accio-theme="" data-theme-mode="light" data-theme-preset="default" className="min-h-screen bg-background p-6 text-foreground">
+      <NotificationList
+        title="Harness Externo"
+        items={items}
+        grouped={true}
+        showReadToggle={true}
+        showMarkAllAction={true}
+        onToggleRead={(item) => {
+          window.__notifEvents?.toggled.push([item.id ?? item.title, item.read]);
+        }}
+        onMarkAllRead={(nextItems) => {
+          if (window.__notifEvents) window.__notifEvents.markedAllCount = nextItems.length;
+        }}
+      />
+    </div>
+  );
+}
+
+createRoot(document.getElementById("root")!).render(<Harness />);
+`;
+    fs.writeFileSync(path.join(exportedFrontend, "src", "main.tsx"), harnessSource, "utf8");
+    for (const args of [["run", "typecheck"], ["run", "build"]]) {
+      const result = spawnSync(NPM_BIN, args, {
+        cwd: exportedFrontend,
+        encoding: "utf8",
+        maxBuffer: 10 * 1024 * 1024,
+      });
+      if (result.status !== 0) {
+        throw new Error(`Harness failed on npm ${args.join(" ")}:\n${result.stdout}\n${result.stderr}`);
+      }
+    }
+
+    const harnessPort = PREVIEW_PORT + 1;
+    const harnessServer = spawn(
+      process.execPath,
+      [
+        path.join(exportedFrontend, "node_modules/vite/bin/vite.js"),
+        "preview",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        String(harnessPort),
+        "--strictPort",
+      ],
+      { cwd: exportedFrontend, stdio: "ignore" }
+    );
+    try {
+      const harnessUrl = `http://127.0.0.1:${harnessPort}/`;
+      await waitForHttp(harnessUrl);
+      await client.setViewport(1280, 800, false);
+      await client.goto(harnessUrl);
+      await client.waitFor(
+        `document.body.innerText.includes('Harness Externo') && document.body.innerText.includes('2 não lidas')`,
+        10000,
+        "Notification harness mounted"
+      );
+
+      // Focus + Enter toggles n1 to read
+      await client.eval(`document.querySelector('[data-slot="toggle-read"][data-notification-key="n1"]').focus()`);
+      await client.pressEnter();
+      await client.waitFor(
+        `document.body.innerText.includes('1 não lida')
+          && Boolean(document.querySelector('[data-section="read"] [data-notification-key="n1"]'))`,
+        3000,
+        "Harness n1 toggled"
+      );
+      assert.equal(
+        await client.eval(`document.activeElement?.dataset?.notificationKey`),
+        "n1"
+      );
+
+      // Equivalent new array reference preserves local read override on n1
+      await client.eval(`window.__notifApi.rerenderEquivalent()`);
+      await wait(100);
+      assert.equal(
+        await client.eval(`document.body.innerText.includes('1 não lida')
+          && Boolean(document.querySelector('[data-section="read"] [data-notification-key="n1"]'))`),
+        true,
+        "Equivalent array reference must not reset local read state"
+      );
+
+      // Real external update on n2 updates n2 while preserving n1 override
+      await client.eval(`window.__notifApi.markSecondExternally()`);
+      await client.waitFor(`document.body.innerText.includes('0 não lidas')`, 3000, "External n2 read update applied");
+
+      // Toggle n1 back to unread locally, then push external sync where n1 becomes read=true, then reopen n1 externally & add n4
+      await client.eval(`document.querySelector('[data-slot="toggle-read"][data-notification-key="n1"]').click()`);
+      await client.waitFor(`document.body.innerText.includes('1 não lida')`, 3000, "n1 reopened locally");
+      await client.eval(`window.__notifApi.markFirstReadExternally()`);
+      await client.waitFor(`document.body.innerText.includes('0 não lidas')`, 3000, "Real external sync on n1 applied");
+      await client.eval(`window.__notifApi.reopenFirstAndAddFourth()`);
+      await client.waitFor(
+        `document.body.innerText.includes('2 não lidas')
+          && document.body.innerText.includes('Novo alerta externo')
+          && Boolean(document.querySelector('[data-section="unread"] [data-notification-key="n1"]'))`,
+        3000,
+        "External reopen of n1 and added n4 applied"
+      );
+
+      // Mark all read and verify callback receives all 4 items
+      await client.eval(`document.querySelector('[data-slot="mark-all-read"]').click()`);
+      await client.waitFor(`document.body.innerText.includes('0 não lidas')`, 3000, "Harness marked all read");
+      const events = await client.eval(`window.__notifEvents`);
+      assert.ok(events.toggled.some(([id, read]) => id === "n1" && read === true));
+      assert.equal(events.markedAllCount, 4);
+      console.log("✔ NotificationList equivalent-array stability and real external updates verified");
+    } finally {
+      harnessServer.kill("SIGTERM");
     }
 
     assert.equal(client.errors.length, 0, `Browser errors:\n${client.errors.join("\n")}`);

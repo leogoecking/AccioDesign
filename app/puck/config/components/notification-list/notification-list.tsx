@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Check, CheckCheck, Circle } from "lucide-react";
 import { cn } from "cn";
 import { Badge } from "~/components/ui/badge";
@@ -58,9 +58,78 @@ const PRIORITY_BADGE: Record<
   baixa: { label: "Baixa", variant: "outline" },
 };
 
-function resolveItemKey(item: NotificationItem, index: number): string {
-  return item.id || `${index}-${item.title}`;
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
+export interface NotificationReadState {
+  externalReadByKey: Record<string, boolean>;
+  overrides: Record<string, boolean>;
 }
+
+export function resolveNotificationKeys(items: NotificationItem[]): string[] {
+  const counts = new Map<string, number>();
+  return items.map((item, index) => {
+    const base = item.id || `${index}-${item.title}`;
+    const seen = counts.get(base) ?? 0;
+    counts.set(base, seen + 1);
+    return seen === 0 ? base : `${base}::${seen}`;
+  });
+}
+
+export function buildExternalReadMap(
+  items: NotificationItem[]
+): Record<string, boolean> {
+  const keys = resolveNotificationKeys(items);
+  return Object.fromEntries(
+    items.map((item, index) => [keys[index], Boolean(item.read)])
+  );
+}
+
+function areReadMapsEqual(
+  a: Record<string, boolean>,
+  b: Record<string, boolean>
+): boolean {
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  for (const key of keysA) {
+    if (!Object.hasOwn(b, key) || a[key] !== b[key]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function reconcileNotificationReadState(
+  prevState: NotificationReadState,
+  nextExternalReadByKey: Record<string, boolean>
+): NotificationReadState {
+  if (areReadMapsEqual(prevState.externalReadByKey, nextExternalReadByKey)) {
+    return prevState;
+  }
+
+  const nextOverrides: Record<string, boolean> = {};
+  for (const [key, overrideValue] of Object.entries(prevState.overrides)) {
+    if (
+      Object.hasOwn(nextExternalReadByKey, key) &&
+      Object.hasOwn(prevState.externalReadByKey, key) &&
+      prevState.externalReadByKey[key] === nextExternalReadByKey[key] &&
+      overrideValue !== nextExternalReadByKey[key]
+    ) {
+      nextOverrides[key] = overrideValue;
+    }
+  }
+
+  return {
+    externalReadByKey: nextExternalReadByKey,
+    overrides: nextOverrides,
+  };
+}
+
+type PendingFocusTarget =
+  | { type: "toggle"; key: string }
+  | { type: "region-first" }
+  | null;
 
 export const NotificationList = ({
   title,
@@ -76,30 +145,67 @@ export const NotificationList = ({
   onSelectNotification,
 }: NotificationListViewProps) => {
   const safeItems = Array.isArray(items) ? items : [];
+  const keys = resolveNotificationKeys(safeItems);
+  const externalReadByKey = buildExternalReadMap(safeItems);
 
-  const [readMap, setReadMap] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(
-      safeItems.map((item, index) => [
-        resolveItemKey(item, index),
-        Boolean(item.read),
-      ])
-    )
+  const [readState, setReadState] = useState<NotificationReadState>(() => ({
+    externalReadByKey,
+    overrides: {},
+  }));
+
+  const syncedReadState = reconcileNotificationReadState(
+    readState,
+    externalReadByKey
   );
+  if (syncedReadState !== readState) {
+    setReadState(syncedReadState);
+  }
 
-  useEffect(() => {
-    setReadMap(
-      Object.fromEntries(
-        safeItems.map((item, index) => [
-          resolveItemKey(item, index),
-          Boolean(item.read),
-        ])
-      )
+  const regionRef = useRef<HTMLDivElement | null>(null);
+  const markAllButtonRef = useRef<HTMLButtonElement | null>(null);
+  const pendingFocusRef = useRef<PendingFocusTarget>(null);
+
+  useIsomorphicLayoutEffect(() => {
+    const pendingFocus = pendingFocusRef.current;
+    if (!pendingFocus) return;
+    pendingFocusRef.current = null;
+
+    const regionEl = regionRef.current;
+    if (!regionEl) return;
+
+    if (pendingFocus.type === "toggle") {
+      const toggleButtons = Array.from(
+        regionEl.querySelectorAll<HTMLButtonElement>('button[data-slot="toggle-read"]')
+      );
+      const targetButton =
+        toggleButtons.find(
+          (button) => button.dataset.notificationKey === pendingFocus.key
+        ) ?? toggleButtons[0];
+      if (targetButton && document.activeElement !== targetButton) {
+        targetButton.focus({ preventScroll: true });
+        return;
+      }
+      if (!targetButton && document.activeElement !== regionEl) {
+        regionEl.focus({ preventScroll: true });
+      }
+      return;
+    }
+
+    const firstToggle = regionEl.querySelector<HTMLButtonElement>(
+      'button[data-slot="toggle-read"]'
     );
-  }, [items]);
+    if (firstToggle) {
+      firstToggle.focus({ preventScroll: true });
+    } else if (document.activeElement !== regionEl) {
+      regionEl.focus({ preventScroll: true });
+    }
+  });
 
   const resolvedEntries = safeItems.map((item, index) => {
-    const key = resolveItemKey(item, index);
-    const isRead = Object.hasOwn(readMap, key) ? readMap[key] : Boolean(item.read);
+    const key = keys[index];
+    const isRead = Object.hasOwn(syncedReadState.overrides, key)
+      ? syncedReadState.overrides[key]
+      : Boolean(item.read);
     return { item, index, key, isRead };
   });
 
@@ -107,30 +213,69 @@ export const NotificationList = ({
 
   const handleToggle = (entry: (typeof resolvedEntries)[number]) => {
     const nextRead = !entry.isRead;
-    setReadMap((prev) => ({ ...prev, [entry.key]: nextRead }));
+    if (
+      typeof document !== "undefined" &&
+      document.activeElement instanceof HTMLElement &&
+      document.activeElement.dataset.slot === "toggle-read" &&
+      document.activeElement.dataset.notificationKey === entry.key
+    ) {
+      pendingFocusRef.current = { type: "toggle", key: entry.key };
+    }
+
+    setReadState((prev) => {
+      const current = reconcileNotificationReadState(prev, externalReadByKey);
+      const nextOverrides = { ...current.overrides };
+      if (nextRead === current.externalReadByKey[entry.key]) {
+        delete nextOverrides[entry.key];
+      } else {
+        nextOverrides[entry.key] = nextRead;
+      }
+      return {
+        externalReadByKey: current.externalReadByKey,
+        overrides: nextOverrides,
+      };
+    });
     onToggleRead?.({ ...entry.item, read: nextRead }, entry.index);
   };
 
   const handleMarkAll = () => {
-    const nextMap = Object.fromEntries(
-      resolvedEntries.map((entry) => [entry.key, true])
-    );
-    setReadMap(nextMap);
+    if (
+      typeof document !== "undefined" &&
+      document.activeElement === markAllButtonRef.current
+    ) {
+      pendingFocusRef.current = { type: "region-first" };
+    }
+
+    setReadState((prev) => {
+      const current = reconcileNotificationReadState(prev, externalReadByKey);
+      const nextOverrides: Record<string, boolean> = {};
+      for (const [key, externalRead] of Object.entries(current.externalReadByKey)) {
+        if (!externalRead) {
+          nextOverrides[key] = true;
+        }
+      }
+      return {
+        externalReadByKey: current.externalReadByKey,
+        overrides: nextOverrides,
+      };
+    });
     onMarkAllRead?.(resolvedEntries.map((entry) => ({ ...entry.item, read: true })));
   };
 
   const sections = grouped
     ? [
         {
+          id: "unread",
           label: `Não lidas (${unreadCount})`,
           entries: resolvedEntries.filter((entry) => !entry.isRead),
         },
         {
+          id: "read",
           label: `Lidas (${resolvedEntries.length - unreadCount})`,
           entries: resolvedEntries.filter((entry) => entry.isRead),
         },
       ].filter((section) => section.entries.length > 0)
-    : [{ label: "", entries: resolvedEntries }];
+    : [{ id: "all", label: "", entries: resolvedEntries }];
 
   return (
     <CompoundContainer padding={padding}>
@@ -155,6 +300,7 @@ export const NotificationList = ({
             {showMarkAllAction && unreadCount > 0 ? (
               <CardAction>
                 <button
+                  ref={markAllButtonRef}
                   type="button"
                   data-slot="mark-all-read"
                   onClick={handleMarkAll}
@@ -179,12 +325,18 @@ export const NotificationList = ({
               </div>
             ) : (
               <div
+                ref={regionRef}
                 role="region"
                 aria-label={title || "Central de notificações"}
-                className="flex flex-col gap-5"
+                tabIndex={-1}
+                className="flex flex-col gap-5 focus:outline-none"
               >
-                {sections.map((section, sectionIdx) => (
-                  <div key={`${section.label}-${sectionIdx}`} className="space-y-2">
+                {sections.map((section) => (
+                  <div
+                    key={section.id}
+                    data-section={section.id}
+                    className="space-y-2"
+                  >
                     {section.label ? (
                       <h3 className="text-xs font-medium text-muted-foreground">
                         {section.label}
@@ -313,6 +465,7 @@ export const NotificationList = ({
                                 <button
                                   type="button"
                                   data-slot="toggle-read"
+                                  data-notification-key={key}
                                   onClick={() => handleToggle(entry)}
                                   aria-label={
                                     isRead

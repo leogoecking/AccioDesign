@@ -862,4 +862,171 @@ describe("Fase 8.2 — Informações e atividades", () => {
       assert.deepStrictEqual(await buildDesignZip(project), await buildDesignZip(project));
     }
   });
+
+  it("garante limites ARIA, texto acessível e tratamento de meta zerada no ProgressCard", async () => {
+    const { createElement } = await import("react");
+    const { renderToStaticMarkup } = await import("react-dom/server");
+    const { ProgressCard, resolveProgressMetrics } = await import(
+      "../app/puck/config/components/progress-card/progress-card"
+    );
+
+    const normal = resolveProgressMetrics({
+      label: "Adoção",
+      current: 40,
+      target: 100,
+      format: "number",
+    });
+    assert.equal(normal.ariaValueMin, 0);
+    assert.equal(normal.ariaValueMax, 100);
+    assert.equal(normal.ariaValueNow, 40);
+    assert.equal(normal.ariaValueText, undefined);
+    assert.equal(normal.isExceeded, false);
+
+    const exceeded = resolveProgressMetrics({
+      label: "Receita",
+      current: 135,
+      target: 100,
+      format: "number",
+      unit: "vendas",
+    });
+    assert.equal(exceeded.ariaValueMin, 0);
+    assert.equal(exceeded.ariaValueMax, 100);
+    assert.equal(exceeded.ariaValueNow, 100);
+    assert.equal(exceeded.rawPct, 135);
+    assert.equal(exceeded.fillPct, 100);
+    assert.equal(exceeded.isExceeded, true);
+    assert.match(exceeded.ariaValueText ?? "", /135%.*135 vendas.*meta ultrapassada/);
+
+    const zeroWithValue = resolveProgressMetrics({
+      label: "Fila avulsa",
+      current: 24,
+      target: 0,
+      format: "number",
+      unit: "itens",
+    });
+    assert.equal(zeroWithValue.hasTarget, false);
+    assert.equal(zeroWithValue.ariaValueMin, 0);
+    assert.equal(zeroWithValue.ariaValueMax, 100);
+    assert.equal(zeroWithValue.ariaValueNow, 0);
+    assert.equal(zeroWithValue.rawPct, null);
+    assert.match(zeroWithValue.ariaValueText ?? "", /Meta não definida.*24 itens/);
+
+    const html = renderToStaticMarkup(
+      createElement(ProgressCard, {
+        title: "Metas de Regressão",
+        showPercentage: true,
+        showValues: true,
+        items: [
+          { label: "Meta ultrapassada", current: 135, target: 100, format: "number", unit: "vendas" },
+          { label: "Meta zerada com valor", current: 24, target: 0, format: "number", unit: "itens" },
+          { label: "Meta zerada vazia", current: 0, target: 0, format: "number" },
+        ],
+      })
+    );
+    assert.match(html, /aria-valuenow="100"[^>]*aria-valuemin="0"[^>]*aria-valuemax="100"/);
+    assert.match(html, /aria-valuetext="135% \(135 vendas de 100 vendas, meta ultrapassada\)"/);
+    assert.match(html, />135%</);
+    assert.match(html, /width:100%/);
+    assert.match(html, /aria-valuenow="0"[^>]*aria-valuemin="0"[^>]*aria-valuemax="100"/);
+    assert.match(html, /aria-valuetext="Meta não definida \(valor atual: 24 itens\)"/);
+    assert.match(html, /Sem meta/);
+    assert.doesNotMatch(html, />0%</);
+
+    const valuesOnlyZeroHtml = renderToStaticMarkup(
+      createElement(ProgressCard, {
+        title: "Somente valores",
+        showPercentage: false,
+        showValues: true,
+        items: [{ label: "Sem alvo", current: 12, target: 0, format: "number", unit: "chamados" }],
+      })
+    );
+    assert.match(valuesOnlyZeroHtml, /12 chamados · sem meta/);
+    assert.doesNotMatch(valuesOnlyZeroHtml.replace(/<[^>]+>/g, " "), /%/);
+  });
+
+  it("mantém agrupamentos estáveis e preserva ou reconcilia leitura no NotificationList", async () => {
+    const { createElement } = await import("react");
+    const { renderToStaticMarkup } = await import("react-dom/server");
+    const {
+      NotificationList,
+      buildExternalReadMap,
+      reconcileNotificationReadState,
+      resolveNotificationKeys,
+    } = await import("../app/puck/config/components/notification-list/notification-list");
+
+    const baseItems = [
+      { id: "n1", title: "Alerta 1", timestamp: "Agora", read: false, priority: "alta" as const },
+      { id: "n2", title: "Alerta 2", timestamp: "Há 5 min", read: false, priority: "normal" as const },
+      { id: "n3", title: "Alerta 3", timestamp: "Há 1 hora", read: true, priority: "baixa" as const },
+    ];
+
+    assert.deepEqual(resolveNotificationKeys(baseItems), ["n1", "n2", "n3"]);
+
+    const html = renderToStaticMarkup(
+      createElement(NotificationList, {
+        title: "Central",
+        grouped: true,
+        items: baseItems,
+      })
+    );
+    assert.match(html, /data-section="unread"/);
+    assert.match(html, /data-section="read"/);
+    assert.match(html, /data-notification-key="n1"/);
+
+    // Override local em n1 (usuário marcou n1 como lida localmente)
+    const initialState = {
+      externalReadByKey: buildExternalReadMap(baseItems),
+      overrides: { n1: true },
+    };
+
+    // Nova referência de array com conteúdo equivalente NÃO deve reinicializar overrides
+    const clonedEquivalentItems = structuredClone(baseItems);
+    const afterEquivalent = reconcileNotificationReadState(
+      initialState,
+      buildExternalReadMap(clonedEquivalentItems)
+    );
+    assert.strictEqual(afterEquivalent, initialState);
+    assert.deepEqual(afterEquivalent.overrides, { n1: true });
+
+    // Alteração externa real em n2 (read: false -> true) deve atualizar n2 mantendo override local de n1
+    const updatedOtherExternal = [
+      { ...baseItems[0] },
+      { ...baseItems[1], read: true },
+      { ...baseItems[2] },
+    ];
+    const afterOtherUpdate = reconcileNotificationReadState(
+      afterEquivalent,
+      buildExternalReadMap(updatedOtherExternal)
+    );
+    assert.notStrictEqual(afterOtherUpdate, afterEquivalent);
+    assert.equal(afterOtherUpdate.externalReadByKey.n2, true);
+    assert.deepEqual(afterOtherUpdate.overrides, { n1: true });
+
+    // Alteração externa real em n1 (read: false -> true) deve limpar o override obsoleto e adotar valor externo
+    const updatedSelfExternal = [
+      { ...baseItems[0], read: true },
+      { ...baseItems[1], read: true },
+      { ...baseItems[2] },
+    ];
+    const afterSelfUpdate = reconcileNotificationReadState(
+      afterOtherUpdate,
+      buildExternalReadMap(updatedSelfExternal)
+    );
+    assert.deepEqual(afterSelfUpdate.overrides, {});
+    assert.equal(afterSelfUpdate.externalReadByKey.n1, true);
+
+    // Nova alteração externa em n1 (read: true -> false) + remoção de n3 + inclusão de n4
+    const updatedAndAddedExternal = [
+      { ...baseItems[0], read: false },
+      { ...baseItems[1], read: true },
+      { id: "n4", title: "Alerta 4", timestamp: "Agora", read: false, priority: "normal" as const },
+    ];
+    const afterAddRemove = reconcileNotificationReadState(
+      { ...afterSelfUpdate, overrides: { n3: false } },
+      buildExternalReadMap(updatedAndAddedExternal)
+    );
+    assert.equal(afterAddRemove.externalReadByKey.n1, false);
+    assert.equal(afterAddRemove.externalReadByKey.n4, false);
+    assert.equal("n3" in afterAddRemove.overrides, false);
+  });
 });
